@@ -1,33 +1,27 @@
 CWE-22: Improper Limitation of a Pathname to a Restricted Directory ('Path Traversal')
 
-Category: Input Validation, File System Access
-Likelihood of Exploit: Medium-High
-OWASP Top 10: A01:2021 - Broken Access Control
+Likelihood of Exploit: High
 
-Description:
-The software uses external input to construct a pathname that is intended to identify a file or directory that is located underneath a restricted parent directory, but the software does not properly neutralize special elements within the pathname that can cause the pathname to resolve to a location outside of the restricted directory. Attackers use sequences like ../ or encoded variants (%2e%2e%2f) to traverse directory boundaries and access arbitrary files.
+Applicable Platforms: Not Language-Specific, AI/ML
 
-Common Consequences:
-- Confidentiality: Read sensitive files outside the web root (e.g., /etc/passwd, application config files, private keys)
-- Integrity: Overwrite critical system files if write operations are affected
-- Code Execution: Read source code containing credentials or upload files to executable locations
-- Denial of Service: Access or corrupt critical system files
+## Description
+The product uses external input to construct a pathname that is intended to identify a file or directory that is located underneath a restricted parent directory, but the product does not properly neutralize special elements within the pathname that can cause the pathname to resolve to a location that is outside of the restricted directory.
 
-Detection Signals in Code:
-- File paths constructed from user input without canonicalization
-- Use of File(baseDir + userInput) without validation
-- File download endpoints that accept filename or path parameters
-- Template rendering that accepts user-specified file paths
-- Missing validation that the resolved path starts with the intended base directory
+## Extended Description
+Many file operations are intended to take place within a restricted directory. By using special elements such as ".." and "/" separators, attackers can escape outside of the restricted location to access files or directories that are elsewhere on the system. One of the most common special elements is the "../" sequence, which in most modern operating systems is interpreted as the parent directory of the current location. This is referred to as relative path traversal. Path traversal also covers the use of absolute pathnames such as "/usr/local/bin" to access unexpected files. This is referred to as absolute path traversal.
 
-Mitigations:
-- Canonicalize file paths using File.getCanonicalPath() and verify they start with the allowed base directory
-- Use allowlists of permitted filenames rather than accepting arbitrary paths
-- Implement chroot jails or containerization to restrict filesystem access
-- Reject input containing ../, ..\, %2e, %2f, null bytes
-- Use indirect references (map user-supplied IDs to actual file paths server-side)
-- Apply principle of least privilege to file system permissions
+## Common Consequences
+- Integrity, Confidentiality, Availability: Execute Unauthorized Code or Commands — The attacker may be able to create or overwrite critical files that are used to execute code, such as programs or libraries.
+- Integrity: Modify Files or Directories — The attacker may be able to overwrite or create critical files, such as programs, libraries, or important data. If the targeted file is used for a security mechanism, then the attacker may be able to 
+- Confidentiality: Read Files or Directories — The attacker may be able read the contents of unexpected files and expose sensitive data. If the targeted file is used for a security mechanism, then the attacker may be able to bypass that mechanism.
+- Availability: DoS: Crash, Exit, or Restart — The attacker may be able to overwrite, delete, or corrupt unexpected critical files such as programs, libraries, or important data. This may prevent the product from working at all and in the case of 
 
-Related CWEs: CWE-23 (Relative Path Traversal), CWE-36 (Absolute Path Traversal), CWE-73 (External Control of File Name or Path)
-Common Platforms: Java, PHP, .NET, Python, Node.js
-SonarQube Rules: java:S2083, php:S2083, python:S2083
+## Potential Mitigations
+- [Implementation] Assume all input is malicious. Use an "accept known good" input validation strategy, i.e., use a list of acceptable inputs that strictly conform to specifications. Reject any input that does not strictly conform to specifications, or transform it into something that does. When performing input validation, consider all potentially relevant properties, including length, type of input, the full range of acceptable values, missing or extra inputs, syntax, consistency across related fields, and conformance to business rules. As an example of business rule logic, "boat" may be syntactically valid because it only contains alphanumeric characters, but it is not valid if the input is only expected to contain colors such as "red" or "blue." Do not rely exclusively on looking for malicious or malformed inputs. This is likely to miss at least one undesirable input, especially if the code's environment changes. This can give attackers enough room to bypass the intended validation. However, denylists can be useful for detecting potential attacks or determining which inputs are so malformed that they should be rejected outright. When validating filenames, use stringent allowlists that limit the character set to be used. If feasible, only allow a single "." character in the filename to avoid weaknesses such as CWE-23, and exclude directory separators such as "/" to avoid CWE-36. Use a list of allowable file extensions, which will help to avoid CWE-434. Do not rely exclusiv
+[...truncated]
+
+## Detection Methods
+- [Automated Static Analysis] Automated techniques can find areas where path traversal weaknesses exist. However, tuning or customization may be required to remove or de-prioritize path-traversal problems that are only exploitable by the product's administrator - or other privileged users - and thus potentially valid behavior or
+- [Manual Static Analysis] Manual white box techniques may be able to provide sufficient code coverage and reduction of false positives if all file access operations can be assessed within limited time constraints.
+- [Automated Static Analysis - Binary or Bytecode] According to SOAR [REF-1479], the following detection techniques may be useful: Highly cost effective: Bytecode Weakness Analysis - including disassembler + source code weakness analysis Cost effective for partial coverage: Binary Weakness Analysis - including disassembler + source code weakness ana
+- [Manual Static Analysis - Binary or Bytecode] According to SOAR [REF-1479], the following detection techniques may be useful: Cost effective for partial coverage: Binary / Bytecode disassembler - then use manual analysis for vulnerabilities & anomalies
