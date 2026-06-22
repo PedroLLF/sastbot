@@ -5,3 +5,5 @@ __pycache__/
 .venv/
 venv/
 chroma_data/
+cwe/
+wstg/
