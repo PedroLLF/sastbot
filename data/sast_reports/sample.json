@@ -1,0 +1,40 @@
+{
+  "issues": [
+    {
+      "key": "AX1a-sql-injection-001",
+      "rule": "java:S3649",
+      "severity": "CRITICAL",
+      "component": "com.example.app:src/main/java/com/example/app/repository/UserRepository.java",
+      "line": 47,
+      "textRange": { "startLine": 47, "endLine": 47, "startOffset": 12, "endOffset": 68 },
+      "message": "Change this code to not construct SQL queries directly from user-controlled data.",
+      "type": "VULNERABILITY",
+      "status": "OPEN",
+      "tags": ["cwe", "owasp-a1", "sql-injection"]
+    },
+    {
+      "key": "AX1b-xss-001",
+      "rule": "java:S5131",
+      "severity": "CRITICAL",
+      "component": "com.example.app:src/main/java/com/example/app/controller/CommentController.java",
+      "line": 83,
+      "textRange": { "startLine": 83, "endLine": 83, "startOffset": 8, "endOffset": 52 },
+      "message": "Sanitize user-provided data before inserting it into the HTML response.",
+      "type": "VULNERABILITY",
+      "status": "OPEN",
+      "tags": ["cwe", "owasp-a3", "xss"]
+    },
+    {
+      "key": "AX1c-hardcoded-cred-001",
+      "rule": "java:S2068",
+      "severity": "BLOCKER",
+      "component": "com.example.app:src/main/java/com/example/app/config/DatabaseConfig.java",
+      "line": 22,
+      "textRange": { "startLine": 22, "endLine": 22, "startOffset": 28, "endOffset": 60 },
+      "message": "Remove this hard-coded password.",
+      "type": "VULNERABILITY",
+      "status": "OPEN",
+      "tags": ["cwe", "owasp-a2"]
+    }
+  ]
+}
