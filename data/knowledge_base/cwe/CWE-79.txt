@@ -1,0 +1,39 @@
+CWE-79: Improper Neutralization of Input During Web Page Generation ('Cross-site Scripting')
+
+Category: Input Validation, Output Encoding
+Likelihood of Exploit: High
+OWASP Top 10: A03:2021 - Injection
+
+Description:
+The software does not neutralize or incorrectly neutralizes user-controllable input before it is placed in output that is used as a web page that is served to other users. When user input is embedded in web pages without proper encoding, attackers can inject client-side scripts (JavaScript, HTML) that execute in the victim's browser under the application's origin.
+
+Types:
+- Reflected XSS: Malicious script is part of the request and reflected immediately in the response
+- Stored XSS: Malicious script is persisted in the database and served to all users who view the content
+- DOM-based XSS: Vulnerability exists in client-side JavaScript that processes user input and writes it to the DOM
+
+Common Consequences:
+- Session Hijacking: Attacker steals cookies (document.cookie) to impersonate victims
+- Credential Theft: Fake login forms injected into the page to capture credentials
+- Malware Distribution: Redirect victims to malicious sites or drive-by downloads
+- Defacement: Alter page content visible to other users
+- CSRF: Force victims' browsers to perform unintended actions
+
+Detection Signals in Code:
+- Unsanitized user input written to HTML response (response.write(), innerHTML, document.write())
+- Missing or incorrect Content-Type and X-Content-Type-Options headers
+- User input reflected in HTML attributes, JavaScript contexts, or URL without encoding
+- Server-side template injection via unescaped variables
+- Use of dangerouslySetInnerHTML in React without sanitization
+
+Mitigations:
+- Apply context-aware output encoding (HTML entity encoding for HTML context, JS encoding for script context)
+- Use template engines with auto-escaping enabled (Thymeleaf, Jinja2 with autoescape)
+- Implement a strong Content Security Policy (CSP) header
+- Set HttpOnly and Secure flags on session cookies
+- Validate and sanitize input server-side using allowlists
+- Use DOMPurify for sanitizing HTML input in client-side code
+
+Related CWEs: CWE-80 (Improper Neutralization of Script in HTML), CWE-83 (Improper Neutralization of Script in Attributes), CWE-116
+Common Platforms: Java, PHP, .NET, Python, JavaScript, Ruby
+SonarQube Rules: java:S5131, php:S5131, javascript:S5131, web:XSSRequestHeaderCheck

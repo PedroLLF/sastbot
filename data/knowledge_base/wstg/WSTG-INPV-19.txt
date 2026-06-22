@@ -1,0 +1,58 @@
+WSTG-INPV-19: Testing for Server-Side Request Forgery (SSRF)
+
+Summary:
+Server-Side Request Forgery (SSRF) occurs when an application fetches a remote resource based on user-supplied URL or hostname without adequately validating the destination. This allows attackers to induce the server to make requests to internal infrastructure, cloud metadata services, or other unintended destinations, bypassing network perimeter controls.
+
+Test Objectives:
+- Identify all application features where the server makes outbound HTTP requests based on user input
+- Test whether the server can be directed to make requests to internal IP addresses
+- Test access to cloud metadata endpoints (AWS, GCP, Azure)
+
+How to Test:
+
+1. Identify SSRF-Prone Features
+   - URL import or fetch functionality (import from URL, load image from URL)
+   - Webhook configuration endpoints
+   - PDF generators that render user-supplied URLs
+   - Social media preview / link unfurling features
+   - File upload from URL (upload by URL)
+   - Server-side HTTP proxies, API gateways with configurable backends
+   - Any parameter named: url, uri, link, src, path, host, endpoint, callback
+
+2. Basic SSRF Detection
+   - Replace URL parameter with Burp Collaborator URL: ?url=https://collaborator.burp.com/
+   - Monitor for incoming HTTP requests to confirm server-side fetch
+   - Try http://127.0.0.1:8080 or http://localhost/admin to access local services
+
+3. Internal Network Scanning via SSRF
+   - Probe private IP ranges: http://10.0.0.1, http://172.16.0.1, http://192.168.1.1
+   - Port scanning: http://192.168.1.1:22, http://192.168.1.1:3306 (distinguish open/closed by response timing or error messages)
+
+4. Cloud Metadata Exfiltration
+   - AWS: http://169.254.169.254/latest/meta-data/iam/security-credentials/
+   - GCP: http://metadata.google.internal/computeMetadata/v1/instance/service-accounts/
+   - Azure: http://169.254.169.254/metadata/instance?api-version=2021-02-01 (requires Metadata: true header)
+
+5. Bypass Techniques
+   - DNS rebinding: use a domain that resolves to 127.0.0.1
+   - IPv6: http://[::1]/ or http://[::ffff:127.0.0.1]/
+   - URL encoding: http://%31%32%37%2e%30%2e%30%2e%31/
+   - Decimal notation: http://2130706433/ (decimal of 127.0.0.1)
+   - Redirect bypass: use attacker server that returns 301 redirect to 127.0.0.1
+
+6. Blind SSRF (No Response Reflection)
+   - Use out-of-band channels: Burp Collaborator, interactsh, canarytokens.org
+   - Observe DNS queries and HTTP callbacks to confirm server-side fetch
+
+Tools:
+   - Burp Suite Collaborator / Interactsh: OOB SSRF detection
+   - SSRFmap: automated SSRF exploitation
+   - Gopherus: SSRF to protocol exploitation (gopher://)
+
+Expected Secure Behavior (Pass Conditions):
+- Server validates URL against strict allowlist of permitted domains/IPs
+- Private IP ranges and localhost are blocked at application or network level
+- Server does not follow HTTP redirects to blocked destinations
+- Cloud metadata endpoints (169.254.169.254) are inaccessible
+- Egress firewall rules prevent application server from reaching unintended destinations
+- DNS resolution validated against IP allowlist after resolution (to prevent DNS rebinding)

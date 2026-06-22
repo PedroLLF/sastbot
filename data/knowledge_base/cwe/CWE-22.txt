@@ -1,0 +1,33 @@
+CWE-22: Improper Limitation of a Pathname to a Restricted Directory ('Path Traversal')
+
+Category: Input Validation, File System Access
+Likelihood of Exploit: Medium-High
+OWASP Top 10: A01:2021 - Broken Access Control
+
+Description:
+The software uses external input to construct a pathname that is intended to identify a file or directory that is located underneath a restricted parent directory, but the software does not properly neutralize special elements within the pathname that can cause the pathname to resolve to a location outside of the restricted directory. Attackers use sequences like ../ or encoded variants (%2e%2e%2f) to traverse directory boundaries and access arbitrary files.
+
+Common Consequences:
+- Confidentiality: Read sensitive files outside the web root (e.g., /etc/passwd, application config files, private keys)
+- Integrity: Overwrite critical system files if write operations are affected
+- Code Execution: Read source code containing credentials or upload files to executable locations
+- Denial of Service: Access or corrupt critical system files
+
+Detection Signals in Code:
+- File paths constructed from user input without canonicalization
+- Use of File(baseDir + userInput) without validation
+- File download endpoints that accept filename or path parameters
+- Template rendering that accepts user-specified file paths
+- Missing validation that the resolved path starts with the intended base directory
+
+Mitigations:
+- Canonicalize file paths using File.getCanonicalPath() and verify they start with the allowed base directory
+- Use allowlists of permitted filenames rather than accepting arbitrary paths
+- Implement chroot jails or containerization to restrict filesystem access
+- Reject input containing ../, ..\, %2e, %2f, null bytes
+- Use indirect references (map user-supplied IDs to actual file paths server-side)
+- Apply principle of least privilege to file system permissions
+
+Related CWEs: CWE-23 (Relative Path Traversal), CWE-36 (Absolute Path Traversal), CWE-73 (External Control of File Name or Path)
+Common Platforms: Java, PHP, .NET, Python, Node.js
+SonarQube Rules: java:S2083, php:S2083, python:S2083

@@ -1,0 +1,52 @@
+WSTG-CLNT-01: Testing for DOM-Based Cross Site Scripting
+
+Summary:
+DOM-based XSS occurs when client-side JavaScript reads attacker-controllable data from the DOM (document.URL, location.hash, document.referrer, localStorage) and writes it unsafely into the DOM (innerHTML, document.write, eval). The payload never reaches the server — it executes entirely in the browser, making it invisible to server-side filters and WAFs.
+
+Test Objectives:
+- Identify JavaScript sources that read user-controllable data
+- Identify JavaScript sinks that write data unsafely to the DOM
+- Determine if data flows from source to sink without sanitization
+
+How to Test:
+
+1. Identify DOM Sources (attacker-controllable input):
+   - document.URL, document.location, location.href, location.search, location.hash
+   - document.referrer
+   - window.name
+   - localStorage, sessionStorage
+   - postMessage events
+
+2. Identify DOM Sinks (dangerous write operations):
+   - innerHTML, outerHTML assignments
+   - document.write(), document.writeln()
+   - eval(), setTimeout(string), setInterval(string), Function(string)
+   - jQuery: .html(), .append(), .prepend(), .after(), .before()
+   - React: dangerouslySetInnerHTML
+
+3. Trace Source-to-Sink Data Flows
+   - Use browser DevTools: set breakpoints on sink methods, inspect call stack
+   - Search JavaScript source for sink calls and trace input origins
+   - Use DOM Invader (Burp Suite) to automatically detect and exploit DOM XSS
+
+4. Exploit
+   - URL hash injection: #<img src=x onerror=alert(1)>
+   - JSON injection via URL parameter consumed by client-side routing
+   - postMessage without origin validation
+
+5. Framework-Specific Checks
+   - Angular: check for template injection via untrusted HTML binding
+   - React: check for dangerouslySetInnerHTML usage
+   - Vue: check for v-html directive with user data
+
+Tools:
+   - DOM Invader (Burp Suite extension): automatic source/sink detection
+   - Browser DevTools: JavaScript debugger, DOM breakpoints
+   - DOMPurify test harness for sanitization verification
+
+Expected Secure Behavior (Pass Conditions):
+- User-controllable data is not written to dangerous DOM sinks
+- DOMPurify or equivalent library sanitizes HTML before innerHTML assignment
+- Content-Security-Policy prevents inline script execution
+- Framework auto-escaping is enabled and not bypassed
+- postMessage handlers validate event.origin before processing

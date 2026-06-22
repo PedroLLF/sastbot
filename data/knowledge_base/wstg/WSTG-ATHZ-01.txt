@@ -1,0 +1,45 @@
+WSTG-ATHZ-01: Testing for Directory Traversal / File Include
+
+Summary:
+Directory traversal vulnerabilities allow attackers to access files and directories stored outside the intended web root folder or application directory. By manipulating file path references with sequences like ../ or encoded equivalents, an attacker can read sensitive system files, configuration files, or application source code.
+
+Test Objectives:
+- Identify all parameters that reference file system paths or file names
+- Determine if path traversal sequences are properly neutralized
+- Assess the scope of accessible files outside the intended directory
+
+How to Test:
+
+1. Identify Path Parameters
+   - Look for parameters that suggest file access: file=, page=, path=, template=, include=, document=, dir=
+   - Review URL patterns like /download?file=report.pdf, /view?page=about
+   - Check POST bodies for file references in form submissions and API requests
+
+2. Basic Path Traversal Payloads
+   - Inject ../ sequences: ?file=../../etc/passwd, ?page=../../../windows/win.ini
+   - Encode the sequences: %2e%2e%2f, ..%2f, %2e%2e/, .%2e/, %2e./
+   - Double-encode: %252e%252e%252f (bypasses single-decode filters)
+   - OS-specific: ..\..\ for Windows, ../ for Unix
+
+3. Null Byte Injection (legacy systems)
+   - Inject null bytes to terminate extension checks: ?file=../../etc/passwd%00.jpg
+   - This bypasses extension allowlists that check the file ends with .jpg
+
+4. Absolute Path Testing
+   - Try absolute paths if relative traversal fails: ?file=/etc/passwd, ?file=C:\Windows\system.ini
+   - Useful when the application concatenates path but doesn't use a base directory
+
+5. Interesting Target Files
+   - Unix: /etc/passwd, /etc/shadow, /etc/hosts, /proc/self/environ, application .properties/.yml files
+   - Windows: C:\Windows\win.ini, C:\Windows\System32\drivers\etc\hosts, web.config
+
+6. Path Traversal in File Upload
+   - Submit multipart forms with filename="../../../webroot/shell.jsp"
+   - Check if files are written to unexpected locations
+
+Expected Secure Behavior (Pass Conditions):
+- Application canonicalizes file paths and verifies they remain within the intended base directory
+- Path traversal sequences (../, ..\, encoded variants) are rejected
+- File access is based on indirect references (IDs, allowlists) rather than user-supplied paths
+- Application returns generic 404 or 403 for invalid path references, not system errors
+- OS-level file permissions prevent web process from reading sensitive system files

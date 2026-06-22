@@ -1,0 +1,42 @@
+CWE-798: Use of Hard-coded Credentials
+
+Category: Authentication, Credential Management
+Likelihood of Exploit: High
+OWASP Top 10: A02:2021 - Cryptographic Failures / A07:2021 - Identification and Authentication Failures
+
+Description:
+The software contains hard-coded credentials, such as a password or cryptographic key, that it uses for its own inbound authentication, outbound communication to external components, or encryption of internal data. Hard-coded credentials cannot be changed without modifying source code, and if discovered in version control or decompiled binaries, immediately compromise the entire system.
+
+Variants:
+- Hard-coded passwords in source code or configuration files committed to version control
+- Hard-coded API keys, tokens, or secrets embedded in application code
+- Hard-coded cryptographic keys used for signing or encryption
+- Default credentials left unchanged in deployed systems
+- Credentials embedded in mobile app binaries or JavaScript bundles
+
+Common Consequences:
+- Authentication Bypass: Attacker uses discovered credentials to authenticate as the application
+- Data Breach: Attacker accesses databases, external APIs, or cloud services
+- Privilege Escalation: Admin credentials exposed allow full system compromise
+- Supply Chain Risk: Credentials in public repositories lead to automated scanning attacks
+- Compliance Violations: PCI-DSS, SOC2, GDPR violations from credential exposure
+
+Detection Signals in Code:
+- String literals assigned to variables named password, secret, key, token, credential
+- Base64-encoded strings near authentication logic (may be encoded credentials)
+- Passwords in JDBC connection strings, connection pool configuration
+- API keys in HTTP client configuration
+- Private keys or certificates embedded as string constants
+- Credentials in Docker files, CI/CD configuration committed to source control
+
+Mitigations:
+- Store credentials in environment variables or secret management systems (HashiCorp Vault, AWS Secrets Manager, Azure Key Vault)
+- Use configuration files excluded from version control (.env files in .gitignore)
+- Implement secret scanning in CI/CD pipelines (GitLeaks, TruffleHog)
+- Rotate all exposed credentials immediately upon discovery
+- Use service accounts with short-lived tokens (OAuth client credentials, IAM roles)
+- Apply least privilege: each service uses its own credentials with minimal required permissions
+
+Related CWEs: CWE-259 (Use of Hard-coded Password), CWE-321 (Use of Hard-coded Cryptographic Key), CWE-522 (Insufficiently Protected Credentials)
+Common Platforms: Java, Python, .NET, JavaScript, Go, Ruby
+SonarQube Rules: java:S2068, python:S2068, javascript:S2068, php:S2068

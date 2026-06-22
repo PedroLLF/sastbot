@@ -1,0 +1,36 @@
+CWE-89: Improper Neutralization of Special Elements used in an SQL Command ('SQL Injection')
+
+Category: Input Validation, Data Integrity
+Likelihood of Exploit: High
+OWASP Top 10: A03:2021 - Injection
+
+Description:
+The software constructs all or part of an SQL command using externally-influenced input from an upstream component, but it does not neutralize or incorrectly neutralizes special elements that could modify the intended SQL command when it is sent to a downstream component.
+
+When a user can insert or "inject" code into an SQL statement, the software may execute the malicious SQL code instead of or in addition to the intended code. This can allow an attacker to read sensitive data, modify data, execute admin operations, recover the content of files, or in some cases issue commands to the operating system.
+
+Common Consequences:
+- Confidentiality: Attacker can read sensitive data from the database (usernames, passwords, PII, financial data)
+- Integrity: Attacker can insert, update, or delete database records
+- Authentication: Attacker may bypass login mechanisms using payloads like ' OR '1'='1
+- Authorization: Attacker can elevate privileges or access restricted data
+- Non-repudiation: Logs can be tampered with to hide attacker activity
+
+Detection Signals in Code:
+- String concatenation used to build SQL queries (e.g., "SELECT * FROM users WHERE id = " + userId)
+- Use of dynamic SQL without parameterization
+- User-controlled input (request parameters, headers, cookies) passed directly into database queries
+- Use of Statement instead of PreparedStatement in Java
+- Raw query execution with f-strings in Python
+
+Mitigations:
+- Use parameterized queries / prepared statements exclusively
+- Apply stored procedures with proper input validation
+- Use an ORM (Hibernate, SQLAlchemy, Entity Framework) that handles parameterization automatically
+- Apply input validation with allowlists for expected characters
+- Implement least privilege database accounts (no DROP, no CREATE for app user)
+- Enable WAF rules targeting SQL injection patterns
+
+Related CWEs: CWE-20 (Improper Input Validation), CWE-116 (Improper Encoding), CWE-943 (Improper Neutralization of Special Elements in Data Query Logic)
+Common Platforms: Java, PHP, .NET, Python, Ruby, JavaScript (Node.js)
+SonarQube Rules: java:S3649, php:S3649, python:S3649, javascript:S3649

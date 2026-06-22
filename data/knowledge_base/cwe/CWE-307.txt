@@ -1,0 +1,42 @@
+CWE-307: Improper Restriction of Excessive Authentication Attempts
+
+Category: Authentication, Rate Limiting
+Likelihood of Exploit: Medium
+OWASP Top 10: A07:2021 - Identification and Authentication Failures
+
+Description:
+The software does not implement sufficient measures to prevent multiple failed authentication attempts within a short time frame, making it more susceptible to brute force attacks. Without rate limiting or account lockout, attackers can systematically attempt every possible password combination or use credential stuffing attacks with leaked password databases.
+
+Attack Variants:
+- Brute Force: Systematically trying all possible password combinations
+- Dictionary Attack: Using wordlists of common passwords
+- Credential Stuffing: Using username/password pairs from other data breaches
+- Password Spraying: Trying a few common passwords against many accounts
+- Reverse Brute Force: Trying one common password against many usernames
+
+Common Consequences:
+- Account Takeover: Gaining unauthorized access to user accounts
+- Mass Compromise: Credential stuffing can compromise many accounts simultaneously
+- Data Breach: Access to personal data, financial information
+- Privilege Escalation: Compromising admin accounts through brute force
+
+Detection Signals in Code:
+- Authentication endpoints without rate limiting middleware
+- Login endpoints that return different error messages for valid vs. invalid usernames (username enumeration)
+- No account lockout policy implemented
+- No CAPTCHA for automated request prevention
+- No monitoring or alerting for repeated failed authentication attempts
+- MFA bypass endpoints with unlimited attempts
+
+Mitigations:
+- Implement progressive delays after failed attempts (exponential backoff)
+- Lock accounts temporarily after N failed attempts (e.g., 5 attempts → 15-minute lockout)
+- Implement CAPTCHA after a threshold of failed attempts
+- Use rate limiting at the API gateway or application level
+- Deploy IP-based rate limiting to throttle requests per source
+- Log and alert on unusual authentication patterns
+- Return generic error messages ("Invalid credentials") regardless of whether username or password is wrong
+
+Related CWEs: CWE-308 (Use of Single-Factor Authentication), CWE-521 (Weak Password Requirements), CWE-287 (Improper Authentication)
+Common Platforms: All web application platforms
+SonarQube Rules: java:S5344

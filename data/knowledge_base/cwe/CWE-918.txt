@@ -1,0 +1,40 @@
+CWE-918: Server-Side Request Forgery (SSRF)
+
+Category: Input Validation, Network Access Control
+Likelihood of Exploit: Medium-High
+OWASP Top 10: A10:2021 - Server-Side Request Forgery (SSRF)
+
+Description:
+The web server receives a URL or similar request from an upstream component and retrieves the contents of this URL, but it does not sufficiently ensure that the request is being sent to the expected destination. SSRF allows attackers to induce the server-side application to make HTTP requests to an arbitrary domain or IP address, potentially reaching internal services that are not exposed to the public internet.
+
+Attack Vectors:
+- Internal Network Scanning: Access internal services (http://192.168.x.x, http://10.x.x.x)
+- Cloud Metadata Theft: Access AWS/GCP/Azure instance metadata endpoints (http://169.254.169.254)
+- Bypass IP Allowlists: Use DNS rebinding, IPv6, or URL redirects to bypass allowlists
+- Protocol Smuggling: Use alternative protocols (file://, gopher://, dict://) to access other resources
+- Service Exploitation: Attack internal APIs, databases, or admin interfaces not exposed externally
+
+Common Consequences:
+- Data Exfiltration: Read cloud metadata, internal configuration, or sensitive files via file://
+- Lateral Movement: Access internal services, databases, or admin consoles
+- Credential Theft: AWS/GCP metadata endpoints expose IAM credentials
+- Remote Code Execution: Exploit vulnerable internal services accessible only from the server
+
+Detection Signals in Code:
+- URL parameters that the server fetches on behalf of the user
+- Image proxy, URL preview, webhook configuration, or PDF generation features
+- HTTP clients (HttpURLConnection, RestTemplate, requests, curl) consuming user-supplied URLs
+- DNS resolution of user-controlled hostnames
+- Redirect following without URL revalidation after redirect
+
+Mitigations:
+- Validate and allowlist target URLs against a strict list of permitted domains/IPs
+- Block requests to private IP ranges (127.0.0.0/8, 10.0.0.0/8, 172.16.0.0/12, 169.254.0.0/16)
+- Disable unnecessary URL schemas (file://, gopher://, dict://)
+- Do not follow HTTP redirects, or re-validate the destination after redirect
+- Use egress network controls to restrict outbound connectivity from application servers
+- Resolve hostnames server-side and validate resolved IPs before making requests
+
+Related CWEs: CWE-441 (Unintended Proxy), CWE-611 (XXE)
+Common Platforms: Java, Python, PHP, Ruby, .NET, Go, JavaScript
+SonarQube Rules: java:S5144, python:S5144

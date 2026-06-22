@@ -1,0 +1,45 @@
+WSTG-INPV-05: Testing for SQL Injection
+
+Summary:
+SQL injection attacks consist of insertion or "injection" of a partial or complete SQL query via data input or transmitted from the client to the application. A successful SQL injection exploit can read sensitive data, modify database data, execute admin operations, recover file content, and in some cases issue commands to the operating system.
+
+Test Objectives:
+- Identify SQL injection points in the application
+- Determine whether the application is vulnerable to SQL injection attacks
+- Assess the severity of the injection and level of access that can be gained
+
+How to Test:
+
+1. Detection: Identify Injection Points
+   - Map all data entry points: URL parameters, POST body fields, HTTP headers (User-Agent, Referer, Cookie), JSON/XML request bodies
+   - Submit boundary characters and observe responses: single quote ('), double quote ("), comment sequences (--, #, /*), boolean payloads (AND 1=1, AND 1=2)
+
+2. Error-Based Testing
+   - Submit ' to trigger SQL syntax errors
+   - Observe whether the application returns database error messages (table names, column names, query structure)
+   - Try UNION SELECT NULL-- to probe column count
+
+3. Boolean-Based Blind Injection
+   - Append AND 1=1 (true condition) — response should be identical to baseline
+   - Append AND 1=2 (false condition) — response should differ (missing data, different content)
+   - If responses differ, the application is vulnerable to boolean-based blind injection
+
+4. Time-Based Blind Injection
+   - Inject SLEEP(5) (MySQL), WAITFOR DELAY '0:0:5' (MSSQL), pg_sleep(5) (PostgreSQL)
+   - Measure response time — if delay occurs, the application executes the injected SQL
+
+5. Out-of-Band Testing
+   - Use DNS-based exfiltration: LOAD_FILE(), UTL_HTTP, xp_dirtree
+   - Monitor DNS queries to confirm code execution
+
+Tools:
+   - SQLMap: automated SQL injection detection and exploitation
+   - Burp Suite: manual payload injection and response analysis
+   - OWASP ZAP: automated scanner with SQLi plugin
+
+Expected Secure Behavior (Pass Conditions):
+- Application returns generic error messages for all inputs (no SQL error details)
+- Injected SQL characters are treated as literal data, not query structure
+- All queries use parameterized statements (verify via code review)
+- WAF blocks common SQL injection patterns
+- Database user has minimal required privileges (SELECT only where appropriate)

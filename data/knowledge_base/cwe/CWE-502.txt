@@ -1,0 +1,39 @@
+CWE-502: Deserialization of Untrusted Data
+
+Category: Input Validation, Data Processing
+Likelihood of Exploit: Medium
+OWASP Top 10: A08:2021 - Software and Data Integrity Failures
+
+Description:
+The application deserializes data without sufficiently verifying that the resulting data will be valid. Deserialization of attacker-controlled data can lead to remote code execution, denial of service, or privilege escalation depending on the classes available in the application classpath. Attackers craft malicious serialized objects using gadget chains from popular libraries.
+
+Attack Vectors:
+- Remote Code Execution: Using gadget chains (Apache Commons Collections, Spring, etc.) to execute arbitrary commands
+- Denial of Service: Crafting objects that consume excessive resources during deserialization
+- Authentication Bypass: Tampering with serialized session tokens or signed cookies
+- Object Injection: PHP unserialize() attacks that invoke destructors with attacker-controlled state
+
+Common Consequences:
+- Code Execution: Full server compromise via RCE gadget chains
+- Data Tampering: Modification of serialized state to bypass business logic
+- Authentication Bypass: Manipulation of serialized session or token data
+- Denial of Service: Resource exhaustion through crafted objects
+
+Detection Signals in Code:
+- Java ObjectInputStream.readObject() consuming user-supplied data
+- PHP unserialize() on user input
+- Python pickle.loads() on untrusted data
+- .NET BinaryFormatter or NetDataContractSerializer deserializing user input
+- Deserializing data from cookies, request bodies, or message queues without integrity verification
+
+Mitigations:
+- Prefer safer serialization formats (JSON with schema validation) over binary serialization
+- If Java serialization is required, use deserialization filters (ObjectInputFilter in Java 9+)
+- Implement integrity verification (HMAC signature) on serialized data before deserializing
+- Run deserialization in low-privilege sandboxes
+- Use libraries like NotSoSerial or SerialKiller to block dangerous classes
+- Monitor for deserialization of unexpected class types in logs
+
+Related CWEs: CWE-913 (Improper Control of Dynamically-Managed Code Resources), CWE-565 (Reliance on Cookies without Validation)
+Common Platforms: Java, PHP, Python, .NET, Ruby
+SonarQube Rules: java:S4508, python:S4508

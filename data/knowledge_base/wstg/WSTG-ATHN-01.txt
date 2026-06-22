@@ -1,0 +1,45 @@
+WSTG-ATHN-01: Testing for Credentials Transported over an Encrypted Channel / Hard-coded and Exposed Credentials
+
+Summary:
+This test covers two related authentication credential risks: (1) credentials transmitted over unencrypted channels, and (2) credentials hard-coded into application source code, configuration files, or binaries. Both expose credentials to interception or discovery by attackers.
+
+Test Objectives:
+- Verify all authentication credentials are transmitted exclusively over TLS
+- Identify hard-coded credentials, API keys, passwords, or tokens in source code and configuration
+- Assess exposure risk if discovered credentials were used by an attacker
+
+How to Test:
+
+1. Credentials over Unencrypted Channel
+   - Attempt to access the login page over HTTP (not HTTPS); verify automatic redirect to HTTPS
+   - Intercept authentication requests using Burp Suite; verify credentials are in HTTPS requests
+   - Test API endpoints that accept credentials; verify TLS is enforced
+   - Check if authentication cookies have the Secure flag set
+
+2. Hard-coded Credentials in Source Code
+   - Search codebase for patterns: password, passwd, secret, api_key, token, credential, connection string
+   - Grep for common credential formats: sk-, sk_live_, Bearer, AWS_ACCESS_KEY, PRIVATE KEY, BEGIN RSA
+   - Check configuration files: application.properties, application.yml, web.xml, .env
+   - Inspect build artifacts (JAR files, WAR files) using decompilers (Jadx, CFR)
+   - Search git history: git log --all --full-history -S "password" -- *.properties
+
+3. Hard-coded Credentials in Binaries / JavaScript
+   - Search minified JavaScript bundles for API keys and tokens
+   - Inspect mobile application APK/IPA files using JADX or MobSF
+   - Check Docker images for embedded credentials: docker inspect, docker history
+
+4. Default Credentials
+   - Identify all third-party components (databases, admin consoles, monitoring tools)
+   - Test default credentials for each (admin/admin, root/root, user/password)
+
+5. Credential Exposure in Logs and Error Messages
+   - Verify credentials are not logged in application or access logs
+   - Check if stack traces expose connection strings or configuration values
+
+Expected Secure Behavior (Pass Conditions):
+- All authentication endpoints enforce HTTPS (HTTP returns 301/302 to HTTPS)
+- No credentials found in source code, configuration committed to version control
+- Credentials loaded exclusively from environment variables or secret managers
+- Authentication cookies have Secure and HttpOnly flags
+- Default credentials changed on all third-party components
+- Application logs do not contain credentials or sensitive tokens

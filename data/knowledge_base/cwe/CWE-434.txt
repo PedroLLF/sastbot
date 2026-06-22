@@ -1,0 +1,42 @@
+CWE-434: Unrestricted Upload of File with Dangerous Type
+
+Category: Input Validation, File Handling
+Likelihood of Exploit: Medium-High
+OWASP Top 10: A04:2021 - Insecure Design / A08:2021 - Software and Data Integrity Failures
+
+Description:
+The software allows the attacker to upload or transfer files of dangerous types that can be automatically processed within the product's environment. File upload functionality without proper type validation allows attackers to upload executable scripts (JSP, PHP, ASPX) or malicious files that are then executed by the server or served to other users.
+
+Attack Vectors:
+- Webshell Upload: Upload a server-side script (JSP, PHP, ASPX) to gain remote code execution
+- Malware Distribution: Upload malware that is then downloaded by other users
+- Content Injection: Upload SVG files containing JavaScript for stored XSS
+- Denial of Service: Upload extremely large files, ZIP bombs, or files that exhaust server resources
+- Path Traversal via Upload: Manipulate file paths in multipart requests to write to arbitrary locations
+
+Common Consequences:
+- Remote Code Execution: Webshell execution gives full server access
+- Data Breach: Access to server file system and all application data
+- Cross-Site Scripting: SVG or HTML file execution in user's browser
+- Denial of Service: Server resource exhaustion
+
+Detection Signals in Code:
+- File upload endpoints that accept any Content-Type
+- Validation based only on file extension (easily bypassed)
+- Files stored in web-accessible directories
+- Missing validation of actual file content (magic bytes)
+- Missing file size limits
+- Filename used directly from user input (path traversal risk)
+
+Mitigations:
+- Validate file type using both extension allowlist AND magic byte inspection
+- Store uploaded files outside the web root in non-executable directories
+- Rename files with a random UUID before storage; never use user-supplied filenames
+- Serve uploaded files through a dedicated controller that sets appropriate Content-Disposition headers
+- Limit file size and enforce quotas per user
+- Scan uploaded files with antivirus/anti-malware before processing
+- Use a CDN or separate domain to serve user-uploaded content (prevents cookie access)
+
+Related CWEs: CWE-22 (Path Traversal), CWE-79 (XSS), CWE-73 (External Control of File Name)
+Common Platforms: Java, PHP, .NET, Python, Node.js, Ruby
+SonarQube Rules: java:S2083 (path traversal variant)

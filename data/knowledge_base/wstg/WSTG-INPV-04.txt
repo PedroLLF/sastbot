@@ -1,0 +1,57 @@
+WSTG-INPV-04: Testing for HTTP Parameter Pollution / Insecure Deserialization
+
+Summary:
+This test covers two related injection risks: (1) HTTP Parameter Pollution (HPP), where duplicate parameters in HTTP requests confuse server or intermediate component parsing; and (2) Insecure Deserialization, where application deserializes attacker-controlled serialized objects, potentially leading to remote code execution or authentication bypass.
+
+Test Objectives:
+- Identify duplicate parameter handling inconsistencies across application components
+- Identify deserialization points that process user-supplied serialized objects
+- Verify that integrity controls protect serialized state before deserialization
+
+How to Test:
+
+1. HTTP Parameter Pollution
+   - Submit duplicate GET/POST parameters: ?user=alice&user=admin
+   - Observe which value the application uses (first, last, concatenated)
+   - Test with WAF in place: WAF may inspect one parameter while application uses the other
+   - Test form fields, JSON keys, and cookie values for duplication handling
+
+2. Identify Deserialization Entry Points
+   - Request/response inspection for base64-encoded data in cookies, POST bodies, or headers
+   - Recognize Java serialized object magic bytes: rO0AB (base64) or 0xACED (hex)
+   - Look for endpoints accepting application/x-java-serialized-object Content-Type
+   - Check for ViewState in ASP.NET, PHP sessions, or Python pickle data in cookies
+   - Identify custom serialization formats in API requests or WebSocket messages
+
+3. Java Deserialization Testing
+   - Use ysoserial to generate gadget chain payloads for common libraries (CommonsCollections, Spring, etc.)
+   - Submit payload to identified deserialization endpoint
+   - Monitor for DNS callbacks (Burp Collaborator) to detect blind deserialization
+   - Attempt command execution via gadget chains if OOB confirmed
+
+4. PHP Deserialization Testing
+   - Identify PHP unserialize() calls consuming user input
+   - Craft objects that trigger magic methods (__destruct, __wakeup) on deserialization
+   - Test for PHP object injection leading to file deletion, write, or code execution
+
+5. HMAC / Signature Bypass
+   - If serialized data appears to be signed, test HMAC bypass:
+     - Change data, keep old signature → verify signature is actually checked
+     - Test known-plaintext attacks on weak HMAC implementations
+
+6. Authentication Bypass via Deserialization
+   - If session tokens are serialized objects, modify role/privilege fields
+   - Re-encode and submit modified token to test if signature validation is enforced
+
+Tools:
+   - ysoserial: Java deserialization gadget payload generator
+   - PHPGGC: PHP gadget chain generator
+   - Burp Suite: request manipulation and OOB detection
+   - Freddy (Burp extension): automatic deserialization vulnerability detection
+
+Expected Secure Behavior (Pass Conditions):
+- Application rejects requests with duplicate parameters or uses consistent, documented behavior
+- Serialized objects are signed with HMAC; signature validation enforced before deserialization
+- Java deserialization uses ObjectInputFilter to block dangerous classes
+- No user-controlled data passed to unserialize(), ObjectInputStream.readObject(), or pickle.loads()
+- Serialized session data replaced with stateless tokens (JWTs) or server-side sessions
