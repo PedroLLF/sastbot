@@ -33,7 +33,7 @@ def _get_or_create(client: chromadb.PersistentClient, name: str, embed_fn, reset
     )
 
 
-def ingest_directory(collection, directory: Path, source: str) -> int:
+def ingest_directory(collection, directory: Path, source: str, batch_size: int = 100) -> int:
     files = list(directory.glob("*.txt"))
     if not files:
         print(f"  No .txt files found in {directory}")
@@ -43,14 +43,22 @@ def ingest_directory(collection, directory: Path, source: str) -> int:
     for f in files:
         doc_id = f.stem
         content = f.read_text(encoding="utf-8")
-        # first line is always "ID: Title" — extract title
         title = content.splitlines()[0].split(":", 1)[-1].strip() if content else doc_id
         ids.append(doc_id)
         documents.append(content)
         metadatas.append({"source": source, "title": title})
 
-    collection.upsert(ids=ids, documents=documents, metadatas=metadatas)
-    return len(ids)
+    total = len(ids)
+    for start in range(0, total, batch_size):
+        end = min(start + batch_size, total)
+        collection.upsert(
+            ids=ids[start:end],
+            documents=documents[start:end],
+            metadatas=metadatas[start:end],
+        )
+        print(f"    batch {start // batch_size + 1}: {end - start} docs upserted")
+
+    return total
 
 
 def main():
