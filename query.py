@@ -40,18 +40,12 @@ def _collect_snippets(issues) -> list[str | None]:
     return snippets
 
 
+_REPORT_PATH = Path("data/sast_reports/sample.json")
+
+
 def main() -> None:
-    report_path = Path(
-        input("SonarQube report path [data/sast_reports/sample.json]: ").strip()
-        or "data/sast_reports/sample.json"
-    )
-
-    if not report_path.exists():
-        print(f"File not found: {report_path}")
-        sys.exit(1)
-
-    report = SonarReport.model_validate_json(report_path.read_text(encoding="utf-8"))
-    print(f"Loaded {len(report.issues)} finding(s).")
+    report = SonarReport.model_validate_json(_REPORT_PATH.read_text(encoding="utf-8"))
+    print(f"Loaded {len(report.issues)} finding(s) from {_REPORT_PATH}.")
 
     user_context = input("\nOptional focus/context (Enter to skip): ").strip()
 
