@@ -1,50 +1,37 @@
-WSTG-ATHN-03: Testing for Weak Lock Out Mechanism (Brute Force Protection)
+WSTG-ATHN-03: Testing for Weak Lock Out Mechanism
 
-Summary:
-Account lockout mechanisms are used to prevent an attacker from guessing a password through brute force or credential stuffing. Insufficient lockout policies, lack of rate limiting, or bypassable account lockout allows attackers to make unlimited authentication attempts.
+## Summary
+Account lockout mechanisms are used to mitigate brute force attacks. Some of the attacks that can be defeated by using lockout mechanism:
 
-Test Objectives:
-- Verify that account lockout is enforced after a defined number of failed attempts
-- Verify that rate limiting prevents rapid automated authentication attempts
-- Identify bypass mechanisms that allow circumventing lockout (IP rotation, username variations)
+- Password guessing or brute-force attacks.
+- Security question guessing.
+- OTP code guessing for two-factor authentication (2FA/MFA).
 
-How to Test:
+Account lockout mechanisms require a balance between protecting accounts from unauthorized access and protecting users from being denied authorized access. Accounts are typically locked after 3 to 5 unsuccessful attempts and can only be unlocked after a predetermined period of time, via a self-service unlock mechanism, or intervention by an administrator.
 
-1. Basic Lockout Testing
-   - Attempt to authenticate with an invalid password for a valid account
-   - Count how many attempts are permitted before lockout triggers
-   - Verify a lockout mechanism is applied (error message change, account disabled)
-   - Document the lockout threshold (should be <= 10 attempts for most applications)
+Despite it being easy to conduct brute force attacks, the result of a successful attack is dangerous as the attacker will have full access on the user account and with it all the functionality and services they have access to.
 
-2. Lockout Duration Testing
-   - After triggering lockout, measure how long until the account can be used again
-   - Try to unlock account using "forgot password" flow during lockout
-   - Verify lockout is not bypassed by resetting password
+## Test Objectives
+- Evaluate the account lockout mechanism's ability to mitigate brute force password guessing.
+- Evaluate the unlock mechanism's resistance to unauthorized account unlocking.
 
-3. Rate Limiting Bypass Testing
-   - Test from different IP addresses (if lockout is IP-based, it may be bypassed)
-   - Vary User-Agent, X-Forwarded-For headers to check if rate limiting uses client-supplied headers
-   - Try simultaneous parallel requests to detect race conditions in lockout logic
-   - Add whitespace variations to username (e.g., " user@example.com") to test normalization
+## How to Test
+### Lockout Mechanism
 
-4. Username Enumeration
-   - Compare error messages for valid vs. invalid usernames during lockout
-   - Response time differences may also indicate valid username (timing attack)
-   - Verify the application returns the same message for both cases
+To test the strength of lockout mechanisms, you will need access to an account that you are willing or can afford to lock. If you have only one account with which you can log on to the web application, perform this test at the end of your test plan to avoid losing testing time by being locked out.
 
-5. CAPTCHA Assessment
-   - Verify CAPTCHA is presented after a threshold of failed attempts
-   - Test CAPTCHA bypass: reuse old CAPTCHA tokens, test for missing server-side validation
+To evaluate the account lockout mechanism's ability to mitigate brute force password guessing, attempt an invalid log in by using the incorrect password a number of times, before using the correct password to verify that the account was locked out. An example test may be as follows:
 
-Tools:
-   - Burp Suite Intruder: automated credential stuffing simulation
-   - Hydra: network login brute forcer
-   - Custom scripts with concurrent request support
+1. Attempt to log in with an incorrect password 3 times.
+2. Successfully log in with the correct password, thereby showing that the lockout mechanism doesn't trigger after 3 incorrect authentication attempts.
+3. Attempt to log in with an incorrect password 4 times.
+4. Successfully log in with the correct password, thereby showing that the lockout mechanism doesn't trigger after 4 incorrect authentication attempts.
+5. Attempt to log in with an incorrect password 5 times.
+6. Attempt to log in with the correct password. The application returns "Your account is locked out.", thereby confirming that the account is locked out after 5 incorrect authentication attempts.
+7. Attempt to log in with the correct password 5 minutes later. The application returns "Your account is locked out.", thereby showing that the lockout mechanism does not automatically unlock after 5 minutes.
+8. Attempt to log in with the correct password 10 minutes later. The application returns "Your account is locked out.", thereby showing that the lockout mechanism does not automatically unlock after 10 minutes.
+9. Successfully log in with the correct password 15 minutes later, thereby showing that the lockout mechanism automatically unlocks after a 10 to 15 minute period.
 
-Expected Secure Behavior (Pass Conditions):
-- Account locked or delayed after 5-10 failed attempts
-- Lockout applies per-account, not per-IP (to prevent bypass via IP rotation)
-- Identical error messages for valid and invalid usernames
-- Exponential backoff or progressive delay between attempts
-- Alert/notification sent to account owner on lockout
-- CAPTCHA or risk-based authentication triggered after threshold
+#### Unique Lockout Mechanisms
+
+[...truncated]
