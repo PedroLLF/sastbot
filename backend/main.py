@@ -4,7 +4,7 @@ from .schemas import AnalyzeRequest, AnalyzeResponse, ErrorResponse, SecurityTes
 from .chroma_service import query_knowledge
 from .openai_service import generate_test_cases
 
-app = FastAPI(title="SAST Security Test Case Generator — RAG", version="2.0.0")
+app = FastAPI(title="SAST Security Test Case Generator — RAG + Code Context", version="3.0.0")
 
 
 @app.get("/health")
@@ -30,8 +30,10 @@ def analyze(body: AnalyzeRequest):
         for issue in issues
     ]
 
-    # LLM: generate test cases grounded in retrieved context
-    llm_report = generate_test_cases(issues, body.message, retrieved_per_finding)
+    # LLM: generate test cases grounded in retrieved context + code snippets (not vectorized)
+    llm_report = generate_test_cases(
+        issues, body.message, retrieved_per_finding, body.code_snippets
+    )
 
     # Merge retrieved doc metadata into final output (not delegated to LLM)
     test_cases: list[SecurityTestCase] = []

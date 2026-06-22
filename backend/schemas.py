@@ -65,6 +65,9 @@ class SecurityTestCase(SecurityTestCaseLLM):
 class AnalyzeRequest(BaseModel):
     report: SonarReport
     message: str = ""
+    # Per-finding code snippets — index aligns with report.issues[].
+    # null entry = no snippet for that finding.
+    code_snippets: list[str | None] = []
 
 
 class AnalyzeResponse(BaseModel):
