@@ -1,42 +1,23 @@
 CWE-434: Unrestricted Upload of File with Dangerous Type
 
-Category: Input Validation, File Handling
-Likelihood of Exploit: Medium-High
-OWASP Top 10: A04:2021 - Insecure Design / A08:2021 - Software and Data Integrity Failures
+Likelihood of Exploit: Medium
 
-Description:
-The software allows the attacker to upload or transfer files of dangerous types that can be automatically processed within the product's environment. File upload functionality without proper type validation allows attackers to upload executable scripts (JSP, PHP, ASPX) or malicious files that are then executed by the server or served to other users.
+Applicable Platforms: ASP.NET, PHP, Not Language-Specific, Web Server, AI/ML
 
-Attack Vectors:
-- Webshell Upload: Upload a server-side script (JSP, PHP, ASPX) to gain remote code execution
-- Malware Distribution: Upload malware that is then downloaded by other users
-- Content Injection: Upload SVG files containing JavaScript for stored XSS
-- Denial of Service: Upload extremely large files, ZIP bombs, or files that exhaust server resources
-- Path Traversal via Upload: Manipulate file paths in multipart requests to write to arbitrary locations
+## Description
+The product allows the upload or transfer of dangerous file types that are automatically processed within its environment.
 
-Common Consequences:
-- Remote Code Execution: Webshell execution gives full server access
-- Data Breach: Access to server file system and all application data
-- Cross-Site Scripting: SVG or HTML file execution in user's browser
-- Denial of Service: Server resource exhaustion
+## Common Consequences
+- Integrity, Confidentiality, Availability: Execute Unauthorized Code or Commands — Arbitrary code execution is possible if an uploaded file is interpreted and executed as code by the recipient. This is especially true for web-server extensions such as .asp and .php because these fil
 
-Detection Signals in Code:
-- File upload endpoints that accept any Content-Type
-- Validation based only on file extension (easily bypassed)
-- Files stored in web-accessible directories
-- Missing validation of actual file content (magic bytes)
-- Missing file size limits
-- Filename used directly from user input (path traversal risk)
+## Potential Mitigations
+- [Architecture and Design] Generate a new, unique filename for an uploaded file instead of using the user-supplied filename, so that no external input is used at all.[REF-422] [REF-423]
+- [Architecture and Design] When the set of acceptable objects, such as filenames or URLs, is limited or known, create a mapping from a set of fixed input values (such as numeric IDs) to the actual filenames or URLs, and reject all other inputs.
+- [Architecture and Design] Consider storing the uploaded files outside of the web document root entirely. Then, use other mechanisms to deliver the files dynamically. [REF-423]
+[...truncated]
 
-Mitigations:
-- Validate file type using both extension allowlist AND magic byte inspection
-- Store uploaded files outside the web root in non-executable directories
-- Rename files with a random UUID before storage; never use user-supplied filenames
-- Serve uploaded files through a dedicated controller that sets appropriate Content-Disposition headers
-- Limit file size and enforce quotas per user
-- Scan uploaded files with antivirus/anti-malware before processing
-- Use a CDN or separate domain to serve user-uploaded content (prevents cookie access)
-
-Related CWEs: CWE-22 (Path Traversal), CWE-79 (XSS), CWE-73 (External Control of File Name)
-Common Platforms: Java, PHP, .NET, Python, Node.js, Ruby
-SonarQube Rules: java:S2083 (path traversal variant)
+## Detection Methods
+- [Dynamic Analysis with Automated Results Interpretation] According to SOAR [REF-1479], the following detection techniques may be useful: Cost effective for partial coverage: Web Application Scanner Web Services Scanner Database Scanners
+- [Dynamic Analysis with Manual Results Interpretation] According to SOAR [REF-1479], the following detection techniques may be useful: Cost effective for partial coverage: Fuzz Tester Framework-based Fuzzer
+- [Manual Static Analysis - Source Code] According to SOAR [REF-1479], the following detection techniques may be useful: Highly cost effective: Focused Manual Spotcheck - Focused manual analysis of source Manual Source Code Review (not inspections)
+- [Automated Static Analysis - Source Code] According to SOAR [REF-1479], the following detection techniques may be useful: Highly cost effective: Source code Weakness Analyzer Context-configured Source Code Weakness Analyzer

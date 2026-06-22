@@ -1,42 +1,27 @@
 CWE-798: Use of Hard-coded Credentials
 
-Category: Authentication, Credential Management
 Likelihood of Exploit: High
-OWASP Top 10: A02:2021 - Cryptographic Failures / A07:2021 - Identification and Authentication Failures
 
-Description:
-The software contains hard-coded credentials, such as a password or cryptographic key, that it uses for its own inbound authentication, outbound communication to external components, or encryption of internal data. Hard-coded credentials cannot be changed without modifying source code, and if discovered in version control or decompiled binaries, immediately compromise the entire system.
+Applicable Platforms: Not Language-Specific, Mobile, ICS/OT
 
-Variants:
-- Hard-coded passwords in source code or configuration files committed to version control
-- Hard-coded API keys, tokens, or secrets embedded in application code
-- Hard-coded cryptographic keys used for signing or encryption
-- Default credentials left unchanged in deployed systems
-- Credentials embedded in mobile app binaries or JavaScript bundles
+## Description
+The product contains hard-coded credentials, such as a password or cryptographic key.
 
-Common Consequences:
-- Authentication Bypass: Attacker uses discovered credentials to authenticate as the application
-- Data Breach: Attacker accesses databases, external APIs, or cloud services
-- Privilege Escalation: Admin credentials exposed allow full system compromise
-- Supply Chain Risk: Credentials in public repositories lead to automated scanning attacks
-- Compliance Violations: PCI-DSS, SOC2, GDPR violations from credential exposure
+## Extended Description
+There are two main variations: Inbound: the product contains an authentication mechanism that checks the input credentials against a hard-coded set of credentials. In this variant, a default administration account is created, and a simple password is hard-coded into the product and associated with that account. This hard-coded password is the same for each installation of the product, and it usually cannot be changed or disabled by system administrators without manually modifying the program, or otherwise patching the product. It can also be difficult for the administrator to detect. Outbound: the product connects to another system or component, and it contains hard-coded credentials for connecting to that component. This variant applies to front-end systems that authenticate with a back-e
 
-Detection Signals in Code:
-- String literals assigned to variables named password, secret, key, token, credential
-- Base64-encoded strings near authentication logic (may be encoded credentials)
-- Passwords in JDBC connection strings, connection pool configuration
-- API keys in HTTP client configuration
-- Private keys or certificates embedded as string constants
-- Credentials in Docker files, CI/CD configuration committed to source control
+## Common Consequences
+- Access Control: Bypass Protection Mechanism — If hard-coded passwords are used, it is almost certain that malicious users will gain access to the account in question. Any user of the product that hard-codes passwords may be able to extract the pa
+- Integrity, Confidentiality, Availability, Access Control, Other: Read Application Data, Gain Privileges or Assume Identity, Execute Unauthorized Code or Commands, Other — This weakness can lead to the exposure of resources or functionality to unintended actors, possibly providing attackers with sensitive information or even execute arbitrary code. If the password is ev
 
-Mitigations:
-- Store credentials in environment variables or secret management systems (HashiCorp Vault, AWS Secrets Manager, Azure Key Vault)
-- Use configuration files excluded from version control (.env files in .gitignore)
-- Implement secret scanning in CI/CD pipelines (GitLeaks, TruffleHog)
-- Rotate all exposed credentials immediately upon discovery
-- Use service accounts with short-lived tokens (OAuth client credentials, IAM roles)
-- Apply least privilege: each service uses its own credentials with minimal required permissions
+## Potential Mitigations
+- [Architecture and Design] For outbound authentication: store passwords, keys, and other credentials outside of the code in a strongly-protected, encrypted configuration file or database that is protected from access by all outsiders, including other local users on the same system. Properly protect the key (CWE-320). If you cannot use encryption to protect the file, then make sure that the permissions are as restrictive as possible [REF-7]. In Windows environments, the Encrypted File System (EFS) may provide some protection.
+- [Architecture and Design] For inbound authentication: Rather than hard-code a default username and password, key, or other authentication credentials for first time logins, utilize a "first login" mode that requires the user to enter a unique strong password or key.
+- [Architecture and Design] If the product must contain hard-coded credentials or they cannot be removed, perform access control checks and limit which entities can access the feature that requires the hard-coded credentials. For example, a feature might only be enabled through the system console instead of through a network connection.
+[...truncated]
 
-Related CWEs: CWE-259 (Use of Hard-coded Password), CWE-321 (Use of Hard-coded Cryptographic Key), CWE-522 (Insufficiently Protected Credentials)
-Common Platforms: Java, Python, .NET, JavaScript, Go, Ruby
-SonarQube Rules: java:S2068, python:S2068, javascript:S2068, php:S2068
+## Detection Methods
+- [Black Box] Credential storage in configuration files is findable using black box methods, but the use of hard-coded credentials for an incoming authentication routine typically involves an account that is not visible outside of the code.
+- [Automated Static Analysis] Automated white box techniques have been published for detecting hard-coded credentials for incoming authentication, but there is some expert disagreement regarding their effectiveness and applicability to a broad range of methods.
+- [Manual Static Analysis] This weakness may be detectable using manual code analysis. Unless authentication is decentralized and applied throughout the product, there can be sufficient time for the analyst to find incoming authentication routines and examine the program logic looking for usage of hard-coded credentials. Conf
+- [Manual Dynamic Analysis] For hard-coded credentials in incoming authentication: use monitoring tools that examine the product's process as it interacts with the operating system and the network. This technique is useful in cases when source code is unavailable, if the product was not developed by you, or if you want to veri

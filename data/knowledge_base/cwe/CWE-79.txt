@@ -1,39 +1,25 @@
 CWE-79: Improper Neutralization of Input During Web Page Generation ('Cross-site Scripting')
 
-Category: Input Validation, Output Encoding
 Likelihood of Exploit: High
-OWASP Top 10: A03:2021 - Injection
 
-Description:
-The software does not neutralize or incorrectly neutralizes user-controllable input before it is placed in output that is used as a web page that is served to other users. When user input is embedded in web pages without proper encoding, attackers can inject client-side scripts (JavaScript, HTML) that execute in the victim's browser under the application's origin.
+Applicable Platforms: Not Language-Specific, AI/ML, Web Based, Web Server
 
-Types:
-- Reflected XSS: Malicious script is part of the request and reflected immediately in the response
-- Stored XSS: Malicious script is persisted in the database and served to all users who view the content
-- DOM-based XSS: Vulnerability exists in client-side JavaScript that processes user input and writes it to the DOM
+## Description
+The product does not neutralize or incorrectly neutralizes user-controllable input before it is placed in output that is used as a web page that is served to other users.
 
-Common Consequences:
-- Session Hijacking: Attacker steals cookies (document.cookie) to impersonate victims
-- Credential Theft: Fake login forms injected into the page to capture credentials
-- Malware Distribution: Redirect victims to malicious sites or drive-by downloads
-- Defacement: Alter page content visible to other users
-- CSRF: Force victims' browsers to perform unintended actions
+## Extended Description
+There are many variants of cross-site scripting, characterized by a variety of terms or involving different attack topologies. However, they all indicate the same fundamental weakness: improper neutralization of dangerous input between the adversary and a victim.
 
-Detection Signals in Code:
-- Unsanitized user input written to HTML response (response.write(), innerHTML, document.write())
-- Missing or incorrect Content-Type and X-Content-Type-Options headers
-- User input reflected in HTML attributes, JavaScript contexts, or URL without encoding
-- Server-side template injection via unescaped variables
-- Use of dangerouslySetInnerHTML in React without sanitization
+## Common Consequences
+- Access Control, Confidentiality: Bypass Protection Mechanism, Read Application Data — The most common attack performed with cross-site scripting involves the disclosure of private information stored in user cookies, such as session information. Typically, a malicious user will craft a 
+- Integrity, Confidentiality, Availability: Execute Unauthorized Code or Commands — In some circumstances it may be possible to run arbitrary code on a victim's computer when cross-site scripting is combined with other flaws, for example, "drive-by hacking."
+- Confidentiality, Integrity, Availability, Access Control: Execute Unauthorized Code or Commands, Bypass Protection Mechanism, Read Application Data — The consequence of an XSS attack is the same regardless of whether it is stored or reflected. The difference is in how the payload arrives at the server. XSS can cause a variety of problems for the en
 
-Mitigations:
-- Apply context-aware output encoding (HTML entity encoding for HTML context, JS encoding for script context)
-- Use template engines with auto-escaping enabled (Thymeleaf, Jinja2 with autoescape)
-- Implement a strong Content Security Policy (CSP) header
-- Set HttpOnly and Secure flags on session cookies
-- Validate and sanitize input server-side using allowlists
-- Use DOMPurify for sanitizing HTML input in client-side code
+## Potential Mitigations
+- [Architecture and Design] Use a vetted library or framework that does not allow this weakness to occur or provides constructs that make this weakness easier to avoid [REF-1482]. Examples of libraries and frameworks that make it easier to generate properly encoded output include Microsoft's Anti-XSS library, the OWASP ESAPI Encoding module, and Apache Wicket.
+- [Implementation, Architecture and Design] Understand the context in which your data will be used and the encoding that will be expected. This is especially important when transmitting data between different components, or when generating outputs that can contain multiple encodings at the same time, such as web pages or multi-part mail messages. Study all expected communication protocols and data representations to determine the required encoding strategies. For any data that will be output to another web page, especially any data that was received from external inputs, use the appropriate encoding on all non-alphanumeric characters. Parts of the same output document may require different encodings, which will vary depending on whether the output is in the: HTML body Element attributes (such as src="XYZ") URIs JavaScript sections Cascading Style Sheets and style property etc. Note that HTML Entity Encoding is only appropriate for the HTML body. Consult the XSS Prevention Cheat Sheet [REF-724] for more details on the types of encoding and escaping that are needed.
+[...truncated]
 
-Related CWEs: CWE-80 (Improper Neutralization of Script in HTML), CWE-83 (Improper Neutralization of Script in Attributes), CWE-116
-Common Platforms: Java, PHP, .NET, Python, JavaScript, Ruby
-SonarQube Rules: java:S5131, php:S5131, javascript:S5131, web:XSSRequestHeaderCheck
+## Detection Methods
+- [Automated Static Analysis] Use automated static analysis tools that target this type of weakness. Many modern techniques use data flow analysis to minimize the number of false positives. This is not a perfect solution, since 100% accuracy and coverage are not feasible, especially when multiple components are involved.
+- [Black Box] Use the XSS Cheat Sheet [REF-714] or automated test-generation tools to help launch a wide variety of attacks against your web application. The Cheat Sheet contains many subtle XSS variations that are specifically targeted against weak XSS defenses.
