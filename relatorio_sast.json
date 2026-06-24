@@ -1,0 +1,563 @@
+{
+    "total": 10,
+    "p": 1,
+    "ps": 500,
+    "paging": {
+        "pageIndex": 1,
+        "pageSize": 500,
+        "total": 10
+    },
+    "effortTotal": 420,
+    "issues": [
+        {
+            "key": "8a61c8f6-3bef-4b6e-9787-a9479df9ef26",
+            "rule": "typescript:S2068",
+            "severity": "MAJOR",
+            "component": "juice-shop:frontend/src/app/login/login.component.ts",
+            "project": "juice-shop",
+            "line": 61,
+            "hash": "e1fc8d44f1e154da300c601b3dc15c47",
+            "textRange": {
+                "startLine": 61,
+                "endLine": 61,
+                "startOffset": 27,
+                "endOffset": 46
+            },
+            "flows": [],
+            "status": "OPEN",
+            "message": "Review this potentially hard-coded password.",
+            "effort": "30min",
+            "debt": "30min",
+            "author": "",
+            "tags": [
+                "cwe"
+            ],
+            "creationDate": "2026-04-16T12:43:20+0000",
+            "updateDate": "2026-04-16T12:43:20+0000",
+            "type": "VULNERABILITY",
+            "scope": "MAIN",
+            "quickFixAvailable": false,
+            "messageFormattings": [],
+            "codeVariants": [],
+            "cleanCodeAttribute": "TRUSTWORTHY",
+            "cleanCodeAttributeCategory": "RESPONSIBLE",
+            "impacts": [
+                {
+                    "softwareQuality": "SECURITY",
+                    "severity": "MEDIUM"
+                }
+            ],
+            "issueStatus": "OPEN",
+            "prioritizedRule": false,
+            "fromSonarQubeUpdate": false,
+            "internalTags": [],
+            "linkedTicketStatus": "NOT_LINKED"
+        },
+        {
+            "key": "6d4ecb57-73d4-482f-ae9c-2728da3971bb",
+            "rule": "secrets:S6706",
+            "severity": "BLOCKER",
+            "component": "juice-shop:lib/insecurity.ts",
+            "project": "juice-shop",
+            "line": 23,
+            "hash": "648b1c2b0817f9c92f0cadebbe3e4bdf",
+            "textRange": {
+                "startLine": 23,
+                "endLine": 23,
+                "startOffset": 20,
+                "endOffset": 51
+            },
+            "flows": [],
+            "status": "OPEN",
+            "message": "Make sure this private key gets revoked, changed, and removed from the code.",
+            "effort": "30min",
+            "debt": "30min",
+            "author": "",
+            "tags": [
+                "cwe"
+            ],
+            "creationDate": "2026-04-16T12:43:20+0000",
+            "updateDate": "2026-04-16T12:43:20+0000",
+            "type": "VULNERABILITY",
+            "scope": "MAIN",
+            "quickFixAvailable": false,
+            "messageFormattings": [],
+            "codeVariants": [],
+            "cleanCodeAttribute": "TRUSTWORTHY",
+            "cleanCodeAttributeCategory": "RESPONSIBLE",
+            "impacts": [
+                {
+                    "softwareQuality": "SECURITY",
+                    "severity": "BLOCKER"
+                }
+            ],
+            "issueStatus": "OPEN",
+            "prioritizedRule": false,
+            "fromSonarQubeUpdate": false,
+            "internalTags": [],
+            "linkedTicketStatus": "NOT_LINKED"
+        },
+        {
+            "key": "fe05cc96-7ed2-4ea0-9c61-48e5a0304238",
+            "rule": "typescript:S6437",
+            "severity": "BLOCKER",
+            "component": "juice-shop:lib/insecurity.ts",
+            "project": "juice-shop",
+            "line": 44,
+            "hash": "f0812a9968209c58008afba7878097b7",
+            "textRange": {
+                "startLine": 44,
+                "endLine": 44,
+                "startOffset": 38,
+                "endOffset": 55
+            },
+            "flows": [],
+            "status": "OPEN",
+            "message": "Revoke and change this password, as it is compromised.",
+            "effort": "1h",
+            "debt": "1h",
+            "author": "",
+            "tags": [
+                "cwe"
+            ],
+            "creationDate": "2026-04-16T12:43:20+0000",
+            "updateDate": "2026-04-16T12:43:20+0000",
+            "type": "VULNERABILITY",
+            "scope": "MAIN",
+            "quickFixAvailable": false,
+            "messageFormattings": [],
+            "codeVariants": [],
+            "cleanCodeAttribute": "TRUSTWORTHY",
+            "cleanCodeAttributeCategory": "RESPONSIBLE",
+            "impacts": [
+                {
+                    "softwareQuality": "SECURITY",
+                    "severity": "BLOCKER"
+                }
+            ],
+            "issueStatus": "OPEN",
+            "prioritizedRule": false,
+            "fromSonarQubeUpdate": false,
+            "internalTags": [],
+            "linkedTicketStatus": "NOT_LINKED"
+        },
+        {
+            "key": "58461e74-9906-46de-a009-cffab4fe9d9c",
+            "rule": "typescript:S6437",
+            "severity": "BLOCKER",
+            "component": "juice-shop:lib/insecurity.ts",
+            "project": "juice-shop",
+            "line": 56,
+            "hash": "f17fead28917f2fb34113e86700ed931",
+            "textRange": {
+                "startLine": 56,
+                "endLine": 56,
+                "startOffset": 40,
+                "endOffset": 48
+            },
+            "flows": [
+                {
+                    "locations": [
+                        {
+                            "component": "juice-shop:lib/insecurity.ts",
+                            "textRange": {
+                                "startLine": 23,
+                                "endLine": 23,
+                                "startOffset": 19,
+                                "endOffset": 901
+                            },
+                            "msg": "Hardcoded value assigned here",
+                            "msgFormattings": []
+                        }
+                    ]
+                }
+            ],
+            "status": "OPEN",
+            "message": "Revoke and change this password, as it is compromised.",
+            "effort": "1h",
+            "debt": "1h",
+            "author": "",
+            "tags": [
+                "cwe"
+            ],
+            "creationDate": "2026-04-16T12:43:20+0000",
+            "updateDate": "2026-04-16T12:43:20+0000",
+            "type": "VULNERABILITY",
+            "scope": "MAIN",
+            "quickFixAvailable": false,
+            "messageFormattings": [],
+            "codeVariants": [],
+            "cleanCodeAttribute": "TRUSTWORTHY",
+            "cleanCodeAttributeCategory": "RESPONSIBLE",
+            "impacts": [
+                {
+                    "softwareQuality": "SECURITY",
+                    "severity": "BLOCKER"
+                }
+            ],
+            "issueStatus": "OPEN",
+            "prioritizedRule": false,
+            "fromSonarQubeUpdate": false,
+            "internalTags": [],
+            "linkedTicketStatus": "NOT_LINKED"
+        },
+        {
+            "key": "33a61807-9d95-4a68-b07a-ccd3f7363e35",
+            "rule": "typescript:S6437",
+            "severity": "BLOCKER",
+            "component": "juice-shop:lib/insecurity.ts",
+            "project": "juice-shop",
+            "line": 152,
+            "hash": "4c1fe38a662c000005360e49c776fd80",
+            "textRange": {
+                "startLine": 152,
+                "endLine": 152,
+                "startOffset": 15,
+                "endOffset": 32
+            },
+            "flows": [
+                {
+                    "locations": [
+                        {
+                            "component": "juice-shop:lib/insecurity.ts",
+                            "textRange": {
+                                "startLine": 23,
+                                "endLine": 23,
+                                "startOffset": 19,
+                                "endOffset": 901
+                            },
+                            "msg": "Hardcoded value assigned here",
+                            "msgFormattings": []
+                        }
+                    ]
+                }
+            ],
+            "status": "OPEN",
+            "message": "Revoke and change this password, as it is compromised.",
+            "effort": "1h",
+            "debt": "1h",
+            "author": "",
+            "tags": [
+                "cwe"
+            ],
+            "creationDate": "2026-04-16T12:43:20+0000",
+            "updateDate": "2026-04-16T12:43:20+0000",
+            "type": "VULNERABILITY",
+            "scope": "MAIN",
+            "quickFixAvailable": false,
+            "messageFormattings": [],
+            "codeVariants": [],
+            "cleanCodeAttribute": "TRUSTWORTHY",
+            "cleanCodeAttributeCategory": "RESPONSIBLE",
+            "impacts": [
+                {
+                    "softwareQuality": "SECURITY",
+                    "severity": "BLOCKER"
+                }
+            ],
+            "issueStatus": "OPEN",
+            "prioritizedRule": false,
+            "fromSonarQubeUpdate": false,
+            "internalTags": [],
+            "linkedTicketStatus": "NOT_LINKED"
+        },
+        {
+            "key": "e671b456-553e-496f-a02b-47b6ca14b299",
+            "rule": "typescript:S7639",
+            "severity": "BLOCKER",
+            "component": "juice-shop:routes/checkKeys.ts",
+            "project": "juice-shop",
+            "line": 10,
+            "hash": "de73c3ec5f8e587d9b46be21a6a07cfa",
+            "textRange": {
+                "startLine": 10,
+                "endLine": 10,
+                "startOffset": 23,
+                "endOffset": 105
+            },
+            "flows": [],
+            "status": "OPEN",
+            "message": "Revoke and change this seed phrase, as it is compromised.",
+            "effort": "1h",
+            "debt": "1h",
+            "author": "",
+            "tags": [
+                "cwe"
+            ],
+            "creationDate": "2026-04-16T12:43:20+0000",
+            "updateDate": "2026-04-16T12:43:20+0000",
+            "type": "VULNERABILITY",
+            "scope": "MAIN",
+            "quickFixAvailable": false,
+            "messageFormattings": [],
+            "codeVariants": [],
+            "cleanCodeAttribute": "CONVENTIONAL",
+            "cleanCodeAttributeCategory": "CONSISTENT",
+            "impacts": [
+                {
+                    "softwareQuality": "SECURITY",
+                    "severity": "BLOCKER"
+                }
+            ],
+            "issueStatus": "OPEN",
+            "prioritizedRule": false,
+            "fromSonarQubeUpdate": false,
+            "internalTags": [],
+            "linkedTicketStatus": "NOT_LINKED"
+        },
+        {
+            "key": "9a288de1-77d5-473b-aea8-86c559568406",
+            "rule": "typescript:S7790",
+            "severity": "MAJOR",
+            "component": "juice-shop:routes/errorHandler.ts",
+            "project": "juice-shop",
+            "line": 27,
+            "hash": "39cf65b2f3dfa28585ebc87e697b677a",
+            "textRange": {
+                "startLine": 27,
+                "endLine": 27,
+                "startOffset": 15,
+                "endOffset": 26
+            },
+            "flows": [],
+            "status": "OPEN",
+            "message": "Make sure this dynamically formatted template is safe here.",
+            "effort": "20min",
+            "debt": "20min",
+            "author": "",
+            "tags": [
+                "cwe"
+            ],
+            "creationDate": "2026-04-16T12:43:20+0000",
+            "updateDate": "2026-04-16T12:43:20+0000",
+            "type": "VULNERABILITY",
+            "scope": "MAIN",
+            "quickFixAvailable": false,
+            "messageFormattings": [],
+            "codeVariants": [],
+            "cleanCodeAttribute": "COMPLETE",
+            "cleanCodeAttributeCategory": "INTENTIONAL",
+            "impacts": [
+                {
+                    "softwareQuality": "MAINTAINABILITY",
+                    "severity": "LOW"
+                },
+                {
+                    "softwareQuality": "SECURITY",
+                    "severity": "MEDIUM"
+                }
+            ],
+            "issueStatus": "OPEN",
+            "prioritizedRule": false,
+            "fromSonarQubeUpdate": false,
+            "internalTags": [],
+            "linkedTicketStatus": "NOT_LINKED"
+        },
+        {
+            "key": "74de4cdb-5256-48b1-97af-c47eaa500ecc",
+            "rule": "typescript:S7790",
+            "severity": "MAJOR",
+            "component": "juice-shop:routes/userProfile.ts",
+            "project": "juice-shop",
+            "line": 87,
+            "hash": "39cf65b2f3dfa28585ebc87e697b677a",
+            "textRange": {
+                "startLine": 87,
+                "endLine": 87,
+                "startOffset": 17,
+                "endOffset": 28
+            },
+            "flows": [],
+            "status": "OPEN",
+            "message": "Make sure this dynamically formatted template is safe here.",
+            "effort": "20min",
+            "debt": "20min",
+            "author": "",
+            "tags": [
+                "cwe"
+            ],
+            "creationDate": "2026-04-16T12:43:20+0000",
+            "updateDate": "2026-04-16T12:43:20+0000",
+            "type": "VULNERABILITY",
+            "scope": "MAIN",
+            "quickFixAvailable": false,
+            "messageFormattings": [],
+            "codeVariants": [],
+            "cleanCodeAttribute": "COMPLETE",
+            "cleanCodeAttributeCategory": "INTENTIONAL",
+            "impacts": [
+                {
+                    "softwareQuality": "MAINTAINABILITY",
+                    "severity": "LOW"
+                },
+                {
+                    "softwareQuality": "SECURITY",
+                    "severity": "MEDIUM"
+                }
+            ],
+            "issueStatus": "OPEN",
+            "prioritizedRule": false,
+            "fromSonarQubeUpdate": false,
+            "internalTags": [],
+            "linkedTicketStatus": "NOT_LINKED"
+        },
+        {
+            "key": "8d7705ba-c727-4518-88f4-1ce9f1d674e8",
+            "rule": "typescript:S7790",
+            "severity": "MAJOR",
+            "component": "juice-shop:routes/videoHandler.ts",
+            "project": "juice-shop",
+            "line": 69,
+            "hash": "39cf65b2f3dfa28585ebc87e697b677a",
+            "textRange": {
+                "startLine": 69,
+                "endLine": 69,
+                "startOffset": 17,
+                "endOffset": 28
+            },
+            "flows": [],
+            "status": "OPEN",
+            "message": "Make sure this dynamically formatted template is safe here.",
+            "effort": "20min",
+            "debt": "20min",
+            "author": "",
+            "tags": [
+                "cwe"
+            ],
+            "creationDate": "2026-04-16T12:43:20+0000",
+            "updateDate": "2026-04-16T12:43:20+0000",
+            "type": "VULNERABILITY",
+            "scope": "MAIN",
+            "quickFixAvailable": false,
+            "messageFormattings": [],
+            "codeVariants": [],
+            "cleanCodeAttribute": "COMPLETE",
+            "cleanCodeAttributeCategory": "INTENTIONAL",
+            "impacts": [
+                {
+                    "softwareQuality": "MAINTAINABILITY",
+                    "severity": "LOW"
+                },
+                {
+                    "softwareQuality": "SECURITY",
+                    "severity": "MEDIUM"
+                }
+            ],
+            "issueStatus": "OPEN",
+            "prioritizedRule": false,
+            "fromSonarQubeUpdate": false,
+            "internalTags": [],
+            "linkedTicketStatus": "NOT_LINKED"
+        },
+        {
+            "key": "4b696fbb-0128-4ca2-a919-e6081a0be342",
+            "rule": "typescript:S6437",
+            "severity": "BLOCKER",
+            "component": "juice-shop:server.ts",
+            "project": "juice-shop",
+            "line": 289,
+            "hash": "b0b2fd84cd9395b28061a57bc0fc07fe",
+            "textRange": {
+                "startLine": 289,
+                "endLine": 289,
+                "startOffset": 10,
+                "endOffset": 22
+            },
+            "flows": [],
+            "status": "OPEN",
+            "message": "Revoke and change this password, as it is compromised.",
+            "effort": "1h",
+            "debt": "1h",
+            "author": "",
+            "tags": [
+                "cwe"
+            ],
+            "creationDate": "2026-04-16T12:43:20+0000",
+            "updateDate": "2026-04-16T12:43:20+0000",
+            "type": "VULNERABILITY",
+            "scope": "MAIN",
+            "quickFixAvailable": false,
+            "messageFormattings": [],
+            "codeVariants": [],
+            "cleanCodeAttribute": "TRUSTWORTHY",
+            "cleanCodeAttributeCategory": "RESPONSIBLE",
+            "impacts": [
+                {
+                    "softwareQuality": "SECURITY",
+                    "severity": "BLOCKER"
+                }
+            ],
+            "issueStatus": "OPEN",
+            "prioritizedRule": false,
+            "fromSonarQubeUpdate": false,
+            "internalTags": [],
+            "linkedTicketStatus": "NOT_LINKED"
+        }
+    ],
+    "components": [
+        {
+            "key": "juice-shop:frontend/src/app/login/login.component.ts",
+            "enabled": true,
+            "qualifier": "FIL",
+            "name": "login.component.ts",
+            "longName": "frontend/src/app/login/login.component.ts",
+            "path": "frontend/src/app/login/login.component.ts"
+        },
+        {
+            "key": "juice-shop:routes/checkKeys.ts",
+            "enabled": true,
+            "qualifier": "FIL",
+            "name": "checkKeys.ts",
+            "longName": "routes/checkKeys.ts",
+            "path": "routes/checkKeys.ts"
+        },
+        {
+            "key": "juice-shop:routes/errorHandler.ts",
+            "enabled": true,
+            "qualifier": "FIL",
+            "name": "errorHandler.ts",
+            "longName": "routes/errorHandler.ts",
+            "path": "routes/errorHandler.ts"
+        },
+        {
+            "key": "juice-shop:routes/userProfile.ts",
+            "enabled": true,
+            "qualifier": "FIL",
+            "name": "userProfile.ts",
+            "longName": "routes/userProfile.ts",
+            "path": "routes/userProfile.ts"
+        },
+        {
+            "key": "juice-shop:lib/insecurity.ts",
+            "enabled": true,
+            "qualifier": "FIL",
+            "name": "insecurity.ts",
+            "longName": "lib/insecurity.ts",
+            "path": "lib/insecurity.ts"
+        },
+        {
+            "key": "juice-shop:server.ts",
+            "enabled": true,
+            "qualifier": "FIL",
+            "name": "server.ts",
+            "longName": "server.ts",
+            "path": "server.ts"
+        },
+        {
+            "key": "juice-shop",
+            "enabled": true,
+            "qualifier": "TRK",
+            "name": "OWASP Juice Shop",
+            "longName": "OWASP Juice Shop"
+        },
+        {
+            "key": "juice-shop:routes/videoHandler.ts",
+            "enabled": true,
+            "qualifier": "FIL",
+            "name": "videoHandler.ts",
+            "longName": "routes/videoHandler.ts",
+            "path": "routes/videoHandler.ts"
+        }
+    ],
+    "facets": []
+}

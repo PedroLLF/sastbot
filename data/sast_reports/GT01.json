@@ -1,0 +1,25 @@
+{
+    "generated_at": "2026-06-24T13:41:22.364287+00:00",
+    "project": "juice-shop",
+    "hotspot_key": "208dea17-f27a-4e83-b216-484334328793",
+    "total": 1,
+    "issues": [
+        {
+            "key": "208dea17-f27a-4e83-b216-484334328793",
+            "rule": "typescript:S1523",
+            "severity": "MAJOR",
+            "component": "juice-shop:routes/b2bOrder.ts",
+            "line": 23,
+            "textRange": {
+                "startLine": 23,
+                "endLine": 23,
+                "startOffset": 8,
+                "endOffset": 23
+            },
+            "message": "Make sure that this dynamic injection or execution of code is safe.",
+            "type": "SECURITY_HOTSPOT",
+            "status": "TO_REVIEW",
+            "tags": []
+        }
+    ]
+}

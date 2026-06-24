@@ -5,21 +5,43 @@ from .schemas import SonarIssue, SecurityTestReport
 
 _client = OpenAI(api_key=settings.openai_api_key)
 
-_SYSTEM_PROMPT = """You are a senior application security engineer specializing in security test case design.
+_SYSTEM_PROMPT = """You are a senior AppSec/SAST analyst.
 
-You receive a list of findings from a SonarQube SAST report and an optional user context/focus.
-For EACH finding, generate exactly one structured security test case.
+Your task is to analyze a SonarQube alert and create a test case for verification and triage based on the fields below.
 
-Rules:
-- test_id: sequential "TC-001", "TC-002", ... matching the order of findings
-- finding_rule and finding_message: copy verbatim from the input finding
-- title: concise action phrase (≤10 words)
-- objective: what security property this test verifies
-- preconditions: list of setup requirements (environment, credentials, tools, etc.)
-- steps: numbered, concrete, executable test steps — no vague actions
-- expected_result: the secure behavior that MUST be observed for the test to pass
-- severity: map from SonarQube severity (BLOCKER/CRITICAL→Critical, MAJOR→High, MINOR→Medium, INFO→Info)
-- references: relevant CWE identifiers and OWASP Testing Guide sections (e.g. "CWE-89", "WSTG-INPV-05")
+Return valid JSON only.
+
+The JSON must match this structure exactly:
+{
+    "test_cases": [
+        {
+            "identificacao": {
+                "id_sonarqube": "...",
+                "arquivo": "...",
+                "linha": 0,
+                "severidade_sast": "...",
+                "regra": "...",
+                "categoria": "..."
+            },
+            "classificacao": {
+                "veredicto": "...",
+                "cwe": "...",
+                "owasp_top_10": "...",
+                "wstg": "...",
+                "justificativa": "..."
+            },
+            "descricao_tecnica": "...",
+            "pre_condicoes_para_verificacao": ["..."],
+            "passos_de_verificacao": [
+                {
+                    "passo": "Passo 01",
+                    "resultado_esperado_verdadeiro_positivo": "...",
+                    "resultado_esperado_falso_positivo": "..."
+                }
+            ]
+        }
+    ]
+}
 
 Do not invent findings. Generate one test case per finding, in the same order."""
 
@@ -28,6 +50,7 @@ def generate_test_cases(issues: list[SonarIssue], user_context: str) -> Security
     findings_payload = [
         {
             "index": i + 1,
+            "key": issue.key,
             "rule": issue.rule,
             "severity": issue.severity,
             "message": issue.message,

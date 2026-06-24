@@ -1,5 +1,4 @@
-from typing import Literal
-from pydantic import BaseModel
+from pydantic import BaseModel, Field
 
 
 # ── SonarQube input ──────────────────────────────────────────────────────────
@@ -21,7 +20,7 @@ class SonarIssue(BaseModel):
     message: str
     type: str | None = None
     status: str | None = None
-    tags: list[str] = []
+    tags: list[str] = Field(default_factory=list)
 
 
 class SonarReport(BaseModel):
@@ -30,21 +29,39 @@ class SonarReport(BaseModel):
 
 # ── LLM output ───────────────────────────────────────────────────────────────
 
+class Identificacao(BaseModel):
+    id_sonarqube: str
+    arquivo: str
+    linha: int | str
+    severidade_sast: str
+    regra: str
+    categoria: str
+
+
+class Classificacao(BaseModel):
+    veredicto: str
+    cwe: str
+    owasp_top_10: str
+    wstg: str
+    justificativa: str
+
+
+class PassoVerificacao(BaseModel):
+    passo: str
+    resultado_esperado_verdadeiro_positivo: str
+    resultado_esperado_falso_positivo: str
+
+
 class SecurityTestCase(BaseModel):
-    test_id: str                                         # "TC-001", "TC-002", ...
-    finding_rule: str                                    # SonarQube rule id
-    finding_message: str                                 # original finding message
-    title: str
-    objective: str
-    preconditions: list[str]
-    steps: list[str]
-    expected_result: str
-    severity: Literal["Critical", "High", "Medium", "Low", "Info"]
-    references: list[str]                                # CWE-xxx, OWASP refs
+    identificacao: Identificacao
+    classificacao: Classificacao
+    descricao_tecnica: str
+    pre_condicoes_para_verificacao: list[str] = Field(default_factory=list)
+    passos_de_verificacao: list[PassoVerificacao] = Field(default_factory=list)
 
 
 class SecurityTestReport(BaseModel):
-    test_cases: list[SecurityTestCase]
+    test_cases: list[SecurityTestCase] = Field(default_factory=list)
 
 
 # ── API contracts ─────────────────────────────────────────────────────────────
@@ -55,7 +72,7 @@ class AnalyzeRequest(BaseModel):
 
 
 class AnalyzeResponse(BaseModel):
-    test_cases: list[SecurityTestCase]
+    test_cases: list[SecurityTestCase] = Field(default_factory=list)
 
 
 class ErrorResponse(BaseModel):

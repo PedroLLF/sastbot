@@ -1,0 +1,56 @@
+{
+  "test_cases": [
+    {
+      "identificacao": {
+        "id_sonarqube": "208dea17-f27a-4e83-b216-484334328793",
+        "arquivo": "juice-shop:routes/b2bOrder.ts",
+        "linha": 23,
+        "severidade_sast": "MAJOR",
+        "regra": "typescript:S1523",
+        "categoria": "SECURITY_HOTSPOT"
+      },
+      "classificacao": {
+        "veredicto": "A verificar",
+        "cwe": "CWE-95: Improper Neutralization of Directives in Dynamically Evaluated Code ('Eval Injection')",
+        "owasp_top_10": "A03:2021 - Injection",
+        "wstg": "WSTG-INPV-11 - Testing for Code Injection",
+        "justificativa": "O alerta indica uso de injeção ou execução dinâmica de código em TypeScript. Sem evidência do fluxo de dados e das validações aplicadas, deve ser tratado como Security Hotspot a ser revisado: será verdadeiro positivo se dados controláveis pelo usuário ou por arquivos externos alcançarem a execução dinâmica sem validação estrita; será falso positivo se a expressão executada for constante, controlada apenas pelo servidor ou suficientemente restringida por allowlist/sandbox segura."
+      },
+      "descricao_tecnica": "Revisar o uso de execução dinâmica de código em `routes/b2bOrder.ts` na linha 23, associado à regra SonarQube `typescript:S1523`. A verificação deve confirmar se a chamada dinâmica, como `eval`, `Function`, importação dinâmica ou mecanismo equivalente, recebe direta ou indiretamente dados controláveis pelo usuário. Caso receba, avaliar se existe validação por allowlist, normalização, isolamento/sandbox e ausência de concatenação de código executável.",
+      "pre_condicoes_para_verificacao": [
+        "Acesso ao repositório e ao arquivo `routes/b2bOrder.ts` na revisão analisada pelo SonarQube.",
+        "Capacidade de identificar o trecho exato da linha 23 e suas dependências/chamadores.",
+        "Ambiente local ou de homologação para executar a aplicação, sem uso de ambiente produtivo.",
+        "Conhecimento dos endpoints ou fluxos funcionais relacionados à rota B2B order.",
+        "Logs de aplicação habilitados para observar erros controlados durante os testes."
+      ],
+      "passos_de_verificacao": [
+        {
+          "passo": "Passo 01",
+          "resultado_esperado_verdadeiro_positivo": "A linha 23 contém execução dinâmica de código, por exemplo `eval`, `new Function`, importação dinâmica ou mecanismo equivalente, capaz de interpretar strings ou expressões em tempo de execução.",
+          "resultado_esperado_falso_positivo": "A linha 23 não contém execução dinâmica de código ou a execução utiliza apenas valores constantes definidos no código-fonte, sem influência de requisições, arquivos enviados, banco de dados, variáveis de ambiente controláveis externamente ou outros dados não confiáveis."
+        },
+        {
+          "passo": "Passo 02",
+          "resultado_esperado_verdadeiro_positivo": "Existe fluxo de dados controlável pelo usuário ou por fonte externa até a chamada de execução dinâmica na linha 23, direta ou indiretamente por variáveis intermediárias.",
+          "resultado_esperado_falso_positivo": "A análise de fluxo mostra que nenhum parâmetro HTTP, corpo da requisição, cabeçalho, cookie, arquivo carregado ou dado persistido por usuário alcança a chamada dinâmica."
+        },
+        {
+          "passo": "Passo 03",
+          "resultado_esperado_verdadeiro_positivo": "A entrada externa é concatenada, interpolada ou repassada para o código dinâmico sem allowlist estrita, permitindo alterar a expressão/comando executado.",
+          "resultado_esperado_falso_positivo": "Quando há entrada externa, ela é convertida para um conjunto finito de opções por allowlist estrita antes da execução, sem concatenação de código, sem interpretação de expressões arbitrárias e com tratamento seguro de erros."
+        },
+        {
+          "passo": "Passo 04",
+          "resultado_esperado_verdadeiro_positivo": "Em ambiente de teste, payloads inofensivos inseridos no ponto de entrada relacionado à rota conseguem modificar o comportamento da execução, produzir erro característico de interpretação de código ou executar expressão não prevista pela lógica funcional.",
+          "resultado_esperado_falso_positivo": "Em ambiente de teste, payloads inofensivos de quebra de sintaxe ou tentativa de expressão arbitrária são rejeitados, geram erro controlado e não alteram o comportamento esperado da rota."
+        },
+        {
+          "passo": "Passo 05",
+          "resultado_esperado_verdadeiro_positivo": "Não há testes, validações ou controles suficientes para impedir execução de código arbitrário, ou a exploração controlada confirma que a expressão executada pode ser influenciada externamente.",
+          "resultado_esperado_falso_positivo": "A implementação possui testes automatizados ou controles documentados demonstrando que apenas operações autorizadas são executadas e que a chamada dinâmica não processa código fornecido externamente."
+        }
+      ]
+    }
+  ]
+}
