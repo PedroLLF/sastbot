@@ -1,0 +1,56 @@
+{
+  "test_cases": [
+    {
+      "identificacao": {
+        "id_sonarqube": "typescript:S6437",
+        "arquivo": "juice-shop:lib/insecurity.ts",
+        "linha": 44,
+        "severidade_sast": "BLOCKER",
+        "regra": "Revoke and change this password, as it is compromised.",
+        "categoria": "Credencial comprometida ou senha hardcoded"
+      },
+      "classificacao": {
+        "veredicto": "Necessita verificação manual",
+        "cwe": "CWE-798 / CWE-620 / CWE-640",
+        "owasp_top_10": "A07:2021 - Identification and Authentication Failures",
+        "wstg": "WSTG-ATHN-07 / WSTG-IDNT-05",
+        "justificativa": "O alerta indica a presença de uma senha comprometida em código-fonte no arquivo lib/insecurity.ts, linha 44. A confirmação depende de verificar se o valor é de fato uma credencial estática usada em fluxo de autenticação, redefinição de senha ou recuperação de conta. Caso o valor esteja ativo, reutilizável ou seja aceito pela aplicação, trata-se de verdadeiro positivo com risco de comprometimento de conta. Caso esteja presente apenas em contexto demonstrativo, teste unitário, dado fictício sem uso em runtime ou aplicação deliberadamente vulnerável sem exposição produtiva, pode ser classificado como falso positivo/risco aceito conforme contexto."
+      },
+      "descricao_tecnica": "O SonarQube reportou a regra typescript:S6437 indicando que uma senha comprometida foi encontrada no código-fonte. A verificação deve confirmar se a linha 44 de lib/insecurity.ts contém uma senha hardcoded, se ela é utilizada pela aplicação em mecanismos de autenticação, alteração ou recuperação de senha, e se o valor pode permitir acesso não autorizado, redefinição de senha sem validação adequada ou assunção de identidade.",
+      "pre_condicoes_para_verificacao": [
+        "Acesso ao repositório contendo o arquivo lib/insecurity.ts.",
+        "Acesso ao trecho da linha 44 e às referências do valor identificado no código.",
+        "Capacidade de executar busca por uso/referências no projeto.",
+        "Ambiente de teste controlado para validar fluxos de autenticação, alteração ou recuperação de senha, sem impactar usuários reais.",
+        "Confirmação do contexto do projeto: produção, homologação, laboratório, aplicação deliberadamente vulnerável ou fixture de teste."
+      ],
+      "passos_de_verificacao": [
+        {
+          "passo": "Passo 01",
+          "resultado_esperado_verdadeiro_positivo": "A linha 44 contém uma senha literal, segredo, resposta de recuperação ou valor equivalente embutido diretamente no código.",
+          "resultado_esperado_falso_positivo": "A linha não contém uma senha real, contém apenas placeholder, string não utilizada, fixture de teste isolada ou valor sem qualquer caminho de execução em runtime."
+        },
+        {
+          "passo": "Passo 02",
+          "resultado_esperado_verdadeiro_positivo": "O valor identificado é referenciado por rotas, serviços, seeds, mecanismos de autenticação, redefinição de senha, recuperação de conta ou criação de usuários.",
+          "resultado_esperado_falso_positivo": "Não há referências funcionais ao valor identificado, ou as referências estão restritas a testes locais/documentação sem impacto em ambiente executável."
+        },
+        {
+          "passo": "Passo 03",
+          "resultado_esperado_verdadeiro_positivo": "É possível usar a senha/valor para autenticar, recuperar conta, alterar senha ou obter privilégios associados a algum usuário da aplicação.",
+          "resultado_esperado_falso_positivo": "Mesmo que exista no código, o valor não é implantado em ambientes acessíveis, não corresponde a usuários reais e não é aceito em nenhum fluxo de autenticação ou recuperação."
+        },
+        {
+          "passo": "Passo 04",
+          "resultado_esperado_verdadeiro_positivo": "O código é utilizado ou pode ser implantado em ambiente real sem controles compensatórios, expondo uma credencial comprometida ou mecanismo fraco de autenticação.",
+          "resultado_esperado_falso_positivo": "O projeto é deliberadamente vulnerável, laboratório ou ambiente educacional sem uso produtivo, e o risco está documentado e aceito formalmente."
+        },
+        {
+          "passo": "Passo 05",
+          "resultado_esperado_verdadeiro_positivo": "A credencial deve ser revogada/rotacionada, removida do código-fonte, substituída por secret manager ou variável segura, e o histórico do repositório deve ser avaliado para exposição prévia.",
+          "resultado_esperado_falso_positivo": "Não há necessidade de rotação porque não existe credencial real, ativa ou reutilizada fora do contexto controlado."
+        }
+      ]
+    }
+  ]
+}

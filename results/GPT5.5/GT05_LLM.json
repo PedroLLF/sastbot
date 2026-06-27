@@ -1,0 +1,56 @@
+{
+  "test_cases": [
+    {
+      "identificacao": {
+        "id_sonarqube": "typescript:S5852",
+        "arquivo": "juice-shop:frontend/src/app/change-password/change-password.component.ts",
+        "linha": 92,
+        "severidade_sast": "MAJOR",
+        "regra": "Make sure the regex used here, which is vulnerable to super-linear runtime due to backtracking, cannot lead to denial of service.",
+        "categoria": "Regular Expression Denial of Service (ReDoS)"
+      },
+      "classificacao": {
+        "veredicto": "A verificar",
+        "cwe": "CWE-1333: Inefficient Regular Expression Complexity",
+        "owasp_top_10": "OWASP Top 10 2021 A04: Insecure Design / ausência de controle adequado contra consumo excessivo de recursos",
+        "wstg": "Não há mapeamento WSTG específico para ReDoS; verificar como teste de validação de entrada e robustez contra negação de serviço no cliente.",
+        "justificativa": "O alerta aponta uma expressão regular em TypeScript potencialmente vulnerável a tempo de execução superlinear por backtracking. A confirmação depende de a regex da linha indicada ser executada sobre entrada controlável pelo usuário, como campos de senha, sem limites efetivos de tamanho/tempo ou reescrita segura. Caso a entrada seja não controlável, rigidamente limitada ou a regex não apresente backtracking problemático no contexto real, o achado deve ser tratado como falso positivo."
+      },
+      "descricao_tecnica": "A regra typescript:S5852 identifica expressões regulares que podem apresentar complexidade superlinear ou exponencial devido a backtracking. Em frontend/src/app/change-password/change-password.component.ts, linha 92, a regex deve ser revisada para determinar se contémquantificadores ambíguos, alternâncias sobrepostas ou padrões aninhados. Se aplicada a valores controlados pelo usuário, como nova senha ou confirmação de senha, um atacante pode fornecer uma string especialmente construída para causar consumo elevado de CPU, travamento da interface do navegadorou degradação de disponibilidade do fluxo de troca de senha.",
+      "pre_condicoes_para_verificacao": [
+        "Acesso ao código-fonte do componente frontend/src/app/change-password/change-password.component.ts na versão analisada pelo SonarQube.",
+        "Ambiente local ou de homologação do Juice Shop disponível para execução, evitando testes de carga em produção.",
+        "Capacidade de acessar o fluxo de alteração de senha com uma conta de teste, se a validação depender da interface autenticada.",
+        "Ferramentas de navegador ou profiler JavaScript disponíveis para observar tempo de execução, uso de CPU e congelamento da interface.",
+        "Identificação exata da regex na linha 92 e do campo/validador que a utiliza."
+      ],
+      "passos_de_verificacao": [
+        {
+          "passo": "Passo 01",
+          "resultado_esperado_verdadeiro_positivo": "A regex da linha 92 contém padrão suscetível a backtracking superlinear, como quantificadores aninhados, alternâncias com prefixos sobrepostos ou repetições ambíguas.",
+          "resultado_esperado_falso_positivo": "A regex da linha 92 não contém construções ambíguas relevantes para backtracking, ou não é a regex efetivamente usada em tempo de execução, ou foi sinalizada por heurística sem impacto demonstrável."
+        },
+        {
+          "passo": "Passo 02",
+          "resultado_esperado_verdadeiro_positivo": "A regex é aplicada diretamente ou indiretamente a entrada controlável pelo usuário no fluxo de alteração de senha, por exemplo campo de senha atual, nova senha ou confirmação, sem limite de comprimento suficiente antes da avaliação.",
+          "resultado_esperado_falso_positivo": "A regex é aplicada apenas a valores constantes, internos, previamente normalizados ou com tamanho máximo pequeno e garantido antes da avaliação da regex."
+        },
+        {
+          "passo": "Passo 03",
+          "resultado_esperado_verdadeiro_positivo": "Ao interagir com a tela de alteração de senha, a entrada fornecida pelo usuário aciona a validação que executa a regex apontada no alerta.",
+          "resultado_esperado_falso_positivo": "Não é possível alcançar a execução da regex por meio da interface ou de chamadas do componente, ou há validação anterior que rejeita o payload antes da regex vulnerável ser executada."
+        },
+        {
+          "passo": "Passo 04",
+          "resultado_esperado_verdadeiro_positivo": "Entradas progressivamente maiores e construídas para quase corresponder ao padrão, falhando apenas no final, causam crescimento desproporcional do tempo de validação, alto uso de CPU ou congelamento perceptível da interface.",
+          "resultado_esperado_falso_positivo": "Testes com entradas crescentes e compatíveis com opior caso do padrão não apresentam crescimento relevante no tempo de processamento, travamento da UI ou aumento anormal de CPU."
+        },
+        {
+          "passo": "Passo 05",
+          "resultado_esperado_verdadeiro_positivo": "Não há mitigação suficiente antes da execuçãoda regex; a correção recomendada é simplificar/reescrever o padrão para evitar backtracking ambíguo e impor limite de tamanho à entrada antes da validação.",
+          "resultado_esperado_falso_positivo": "Existe mitigação efetiva, como limite rígido de tamanho antes da regex, substituição por regex linear, validação por biblioteca segura ou outra lógica que impeça exploração prática."
+        }
+      ]
+    }
+  ]
+}

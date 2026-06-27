@@ -1,0 +1,56 @@
+{
+  "test_cases": [
+    {
+      "identificacao": {
+        "id_sonarqube": "typescript:S2068",
+        "arquivo": "juice-shop:frontend/src/app/login/login.component.ts",
+        "linha": 61,
+        "severidade_sast": "MAJOR",
+        "regra": "Review this potentially hard-coded password.",
+        "categoria": "Credenciais hard-coded"
+      },
+      "classificacao": {
+        "veredicto": "Necessita validação",
+        "cwe": "CWE-259",
+        "owasp_top_10": "A07:2021 - Identification and Authentication Failures",
+        "wstg": "WSTG-ATHN-07",
+        "justificativa": "A regra typescript:S2068 sinaliza um possível valor de senha hard-coded em frontend/src/app/login/login.component.ts na linha 61. Como não foi fornecido o trecho de código, o veredicto deve ser confirmado por revisão: será verdadeiro positivo se o valor literal representar credencial, senha padrão, senha de demonstração reutilizável ou segredo utilizado em autenticação/comunicação; será falso positivo se for apenas nome de campo, placeholder, chave de tradução, texto de UI, mock não implantado ou valor sem capacidade de autenticação."
+      },
+      "descricao_tecnica": "Verificar se a linha 61 do componente de login contém uma senha ou segredo fixo no código TypeScript. Em aplicações frontend, qualquer literal sensível incluído no código-fonte pode ser exposto no bundle JavaScript entregue ao navegador, permitindo que usuários ou atacantes recuperem a credencial por inspeção do código, sourcemaps, DevTools ou repositório. A triagem deve diferenciar credenciais reais de valores não sensíveis, como labels, placeholders ou nomes de parâmetros.",
+      "pre_condicoes_para_verificacao": [
+        "Acesso ao repositório do projeto e ao arquivo frontend/src/app/login/login.component.ts na revisão analisada pelo SonarQube.",
+        "Acesso ao contexto da linha 61, incluindo algumas linhas antes e depois, para entender variável, função e fluxo de uso.",
+        "Capacidade de executar busca no código por referências ao valor ou variável sinalizada.",
+        "Quando aplicável, acesso ao build frontend gerado ou ambiente de teste para confirmar exposição no bundle e impacto no fluxo de autenticação.",
+        "Permissão para executar testes controlados de autenticação sem afetar contas reais ou dados de produção."
+      ],
+      "passos_de_verificacao": [
+        {
+          "passo": "Passo 01",
+          "resultado_esperado_verdadeiro_positivo": "A linha contém um literal ou valor fixo que representa senha, segredo, senha padrão, credencial de teste reutilizável ou dado equivalente usado,direta ou indiretamente, em fluxo de autenticação.",
+          "resultado_esperado_falso_positivo": "A linha contém apenas texto não sensível relacionado a UI, placeholder, nome de variável/propriedade, chave de tradução ou exemplo sem uso como credencial."
+        },
+        {
+          "passo": "Passo 02",
+          "resultado_esperado_verdadeiro_positivo": "O valor é propagado para o fluxo de autenticação, preenchimento automático de credenciais, chamada de API, comparação de senha, geração de token, configuração de conexão ou outro mecanismo que possa permitir acesso ou assumir identidade.",
+          "resultado_esperado_falso_positivo": "O valor identificado não é propagado para chamadasde login, headers, payloads de autenticação, serviços, armazenamento local/session storage, configuração de ambiente ou qualquer mecanismo de controle de acesso."
+        },
+        {
+          "passo": "Passo 03",
+          "resultado_esperado_verdadeiro_positivo": "O valor sensível aparece no bundle JavaScript, sourcemap ou artefato frontend gerado, confirmando que pode ser recuperado por qualquer usuário com acesso à aplicação.",
+          "resultado_esperado_falso_positivo": "O valor não aparece no bundle JavaScript de produção ou aparece apenas como texto público sem função de credencial."
+        },
+        {
+          "passo": "Passo 04",
+          "resultado_esperado_verdadeiro_positivo": "O valor permite autenticação, facilita login em conta conhecida/padrão, contorna parte do fluxo de autenticação ou viabiliza acesso a componenteinterno/externo.",
+          "resultado_esperado_falso_positivo": "Tentar utilizar o valor como senha em conta, usuário padrão, endpoint de login ou fluxo correlato não concede autenticação nem acesso adicional, e háevidência de que o valor não é uma credencial válida."
+        },
+        {
+          "passo": "Passo 05",
+          "resultado_esperado_verdadeiro_positivo": "O valor está versionado e/ou distribuído em build acessível, inclusive se destinado a demonstração, teste ou conta padrão, pois continua recuperável e potencialmente reutilizável.",
+          "resultado_esperado_falso_positivo": "O valor é necessário apenas para demonstração local ou teste não distribuído e não está presente em branches, builds ou ambientes acessíveis a usuários finais."
+        }
+      ]
+    }
+  ]
+}

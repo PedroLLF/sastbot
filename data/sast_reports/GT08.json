@@ -1,0 +1,54 @@
+{
+    "generated_at": "2026-06-27T17:47:51.138175+00:00",
+    "project": "juice-shop",
+    "report_url": "http://localhost:9000/project/issues?issues=fe05cc96-7ed2-4ea0-9c61-48e5a0304238&open=fe05cc96-7ed2-4ea0-9c61-48e5a0304238&id=juice-shop",
+    "issue_key": "fe05cc96-7ed2-4ea0-9c61-48e5a0304238",
+    "hotspot_lookup_error": "Erro na API: 404 - {\"errors\":[{\"msg\":\"Hotspot \\u0027fe05cc96-7ed2-4ea0-9c61-48e5a0304238\\u0027 does not exist\"}]}",
+    "total": 1,
+    "issues": [
+        {
+            "key": "fe05cc96-7ed2-4ea0-9c61-48e5a0304238",
+            "rule": "typescript:S6437",
+            "severity": "BLOCKER",
+            "component": "juice-shop:lib/insecurity.ts",
+            "project": "juice-shop",
+            "line": 44,
+            "hash": "f0812a9968209c58008afba7878097b7",
+            "textRange": {
+                "startLine": 44,
+                "endLine": 44,
+                "startOffset": 38,
+                "endOffset": 55
+            },
+            "flows": [],
+            "status": "OPEN",
+            "message": "Revoke and change this password, as it is compromised.",
+            "effort": "1h",
+            "debt": "1h",
+            "author": "",
+            "tags": [
+                "cwe"
+            ],
+            "creationDate": "2026-04-16T12:43:20+0000",
+            "updateDate": "2026-04-16T12:43:20+0000",
+            "type": "VULNERABILITY",
+            "scope": "MAIN",
+            "quickFixAvailable": false,
+            "messageFormattings": [],
+            "codeVariants": [],
+            "cleanCodeAttribute": "TRUSTWORTHY",
+            "cleanCodeAttributeCategory": "RESPONSIBLE",
+            "impacts": [
+                {
+                    "softwareQuality": "SECURITY",
+                    "severity": "BLOCKER"
+                }
+            ],
+            "issueStatus": "OPEN",
+            "prioritizedRule": false,
+            "fromSonarQubeUpdate": false,
+            "internalTags": [],
+            "linkedTicketStatus": "NOT_LINKED"
+        }
+    ]
+}

@@ -1,0 +1,56 @@
+{
+  "test_cases": [
+    {
+      "identificacao": {
+        "id_sonarqube": "typescript:S1523",
+        "arquivo": "routes/b2bOrder.ts",
+        "linha": 23,
+        "severidade_sast": "MAJOR",
+        "regra": "Make sure that this dynamic injection or execution of code is safe.",
+        "categoria": "Code Injection / Eval Injection"
+      },
+      "classificacao": {
+        "veredicto": "A verificar",
+        "cwe": "CWE-95 / CWE-94",
+        "owasp_top_10": "A03:2021 - Injection",
+        "wstg": "WSTG-INPV-11 - Testing for Code Injection",
+        "justificativa": "O alerta indica uso de execução dinâmica de código em TypeScript/JavaScript na linha 23. A vulnerabilidade será considerada verdadeiro positivo se dados controlados pelo usuário, como corpo da requisição, parâmetros, arquivo enviado ou cabeçalhos, alcançarem a chamada de execução dinâmica sem validação por lista de permissão, neutralização adequada ou sandbox com restrições efetivas. Será considerado falso positivo se o conteúdo executado for constante, interno, validado estritamente ou isolado de forma que não permita alterar o fluxo de execução."
+      },
+      "descricao_tecnica": "A regra typescript:S1523 sinaliza chamadas capazes de interpretar strings como código, como eval, Function, setTimeout/setInterval com string, vm.runIn* ou mecanismos equivalentes. Em routes/b2bOrder.ts, linha 23, deve-se verificar se a rota de pedido B2B constrói ou executa código a partir de entrada externa. Caso confirmado, um atacante pode injetar expressões ou instruções JavaScript/Node.js para executar lógica não autorizada no contexto da aplicação.",
+      "pre_condicoes_para_verificacao": [
+        "Acesso ao código-fonte do componente juice-shop, especialmente ao arquivo routes/b2bOrder.ts.",
+        "Ambiente local ou de homologação da aplicação em execução, com logs habilitados.",
+        "Identificação da rota HTTP associada ao arquivo routes/b2bOrder.ts e dos campos aceitos pela funcionalidade de pedido B2B.",
+        "Ferramenta para envio de requisições HTTP ou upload de arquivo, como curl, Postman ou proxy interceptador.",
+        "Garantia de que os testes serão realizados com payloads não destrutivos e sem acesso a dados sensíveis reais."
+      ],
+      "passos_de_verificacao": [
+        {
+          "passo": "Passo 01",
+          "resultado_esperado_verdadeiro_positivo": "A linha 23 contém uma chamada de execução dinâmica de código e recebe, direta ou indiretamente, dados provenientes de requisição HTTP, arquivo enviado, parâmetro, cabeçalho ou outro input controlável pelo usuário.",
+          "resultado_esperado_falso_positivo": "A linha 23 não utiliza entrada externa na execução dinâmica, ou executa apenas conteúdo constante/controlado pela aplicação."
+        },
+        {
+          "passo": "Passo 02",
+          "resultado_esperado_verdadeiro_positivo": "A análise de fluxo mostra concatenação, interpolação ou passagem direta de input do usuário para a chamada dinâmica, sem validação estrita ou com sanitização insuficiente baseada apenas em bloqueio de caracteres/palavras.",
+          "resultado_esperado_falso_positivo": "A análise de fluxo mostra validação estrita por lista de permissão, parsing seguro para tipos esperados ou sandbox efetivo que impede acesso a APIs sensíveis e impede alteração do fluxo de execução."
+        },
+        {
+          "passo": "Passo 03",
+          "resultado_esperado_verdadeiro_positivo": "Ao enviar uma expressão inofensiva e rastreável no campo controlável, por exemplo uma expressão aritmética esperada apenas como texto, a resposta, logs ou comportamento da aplicação indicam que a expressão foi avaliada como código.",
+          "resultado_esperado_falso_positivo": "Ao enviar um valor benigno no ponto de entrada da rota B2B, a aplicação trata o valor como dado comum e não avalia expressões ou instruções como código."
+        },
+        {
+          "passo": "Passo 04",
+          "resultado_esperado_verdadeiro_positivo": "Ao enviar um payload de teste não destrutivo, como uma instrução que lança uma exceção com marcador único, os logs ou a resposta mostram o marcador, confirmando que o input controlado pelo usuário foi executado como código.",
+          "resultado_esperado_falso_positivo": "Ao enviar um payload de teste não destrutivo que causaria um erro identificável somente se fosse executado, a aplicação rejeita o input por validação ou trata o conteúdo como texto, sem erro de execução originado no interpretador JavaScript."
+        },
+        {
+          "passo": "Passo 05",
+          "resultado_esperado_verdadeiro_positivo": "A execução controlada pelo usuário é reproduzível e ocorre no contexto do processo da aplicação, indicando risco de leitura de dados, alteração de lógica ou escalonamento para execução de comandos dependendo das permissões disponíveis.",
+          "resultado_esperado_falso_positivo": "Não é possível demonstrar execução de código controlado pelo usuário e existem controles documentados no código que limitam o comportamento ao domínio esperado da funcionalidade."
+        }
+      ]
+    }
+  ]
+}

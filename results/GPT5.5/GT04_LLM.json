@@ -1,0 +1,56 @@
+{
+  "test_cases": [
+    {
+      "identificacao": {
+        "id_sonarqube": "typescript:S7790",
+        "arquivo": "juice-shop:routes/userProfile.ts",
+        "linha": 87,
+        "severidade_sast": "MAJOR",
+        "regra": "Make sure this dynamically formatted template is safe here.",
+        "categoria": "Template Injection"
+      },
+      "classificacao": {
+        "veredicto": "Pendente de verificação",
+        "cwe": "CWE-1336",
+        "owasp_top_10": "OWASP Top 10 2021 A03: Injection",
+        "wstg": "WSTG-INPV-18 - Testing for Server-side Template Injection",
+        "justificativa": "O alerta indica uso de template formatado dinamicamente em routes/userProfile.ts:87. Como a evidência fornecida não inclui o trecho de código nem o fluxo de dados completo, o veredicto deve permanecer pendente até confirmar se dados externos influenciam o template antesdo processamento pelo motor de templates. CWE-546 aparece nas referências, mas a mensagem e a regra apontam primariamente para injeção em template."
+      },
+      "descricao_tecnica": "Verificar se a construção ou renderização dinâmica de template na linha 87 de routes/userProfile.ts permite que entrada controlada pelo usuário seja incorporada ao template antes da compilação/renderização. Caso o conteúdo externo seja interpretado como sintaxe do motor de templates, pode ocorrer Server-Side Template Injection, com impacto potencial de execução de expressões, leitura de dados ou execução de código dependendo do motor e da configuração.",
+      "pre_condicoes_para_verificacao": [
+        "Acesso ao código-fonte do componente juice-shop, especialmente routes/userProfile.ts na linha 87.",
+        "Ambiente de teste isolado com a aplicação em execução, sem uso de produção.",
+        "Identificação do motor de templates utilizado no ponto alertado e de sua sintaxe de expressão.",
+        "Usuário ou mecanismo de teste capaz de alterar os dados de perfil/entrada processados pela rota userProfile.",
+        "Ferramentas para interceptar requisições e observar respostas, logs e erros da aplicação."
+      ],
+      "passos_de_verificacao": [
+        {
+          "passo": "Passo 01",
+          "resultado_esperado_verdadeiro_positivo": "A linha 87 compila/renderiza um template construído dinamicamente com dados provenientes de requisição HTTP, perfil de usuário, banco de dados populado por usuário ou outro dado externamente influenciado.",
+          "resultado_esperado_falso_positivo": "A linha 87 usa apenas templates estáticos ou valores constantes/controlados pelo servidor, sem concatenação/interpolação de entrada externa antes da compilação/renderização do template."
+        },
+        {
+          "passo": "Passo 02",
+          "resultado_esperado_verdadeiro_positivo": "A análise de fluxo mostra que o valor controlado pelo usuário é concatenado, interpolado ou formatado dentro da string do template antes de ser processado pelo motor de templates.",
+          "resultado_esperado_falso_positivo": "A análise de fluxo mostra que qualquer dado de usuário é passado como variável/contexto do template com escape adequado, e não como parte da string de template a ser interpretada."
+        },
+        {
+          "passo": "Passo 03",
+          "resultado_esperado_verdadeiro_positivo": "Ao inserir payloads benignos de detecção no campo que alimenta routes/userProfile.ts, por exemplo uma expressão aritmética de template adequada ao motor utilizado, a resposta retorna o resultado avaliado ou demonstra interpretação da sintaxe de template.",
+          "resultado_esperado_falso_positivo": "Ao inserir payloads benignos de detecção, como expressões aritméticas compatíveis com o motor de templates usado, a resposta exibe o payload literalmente ou o neutraliza, sem avaliação da expressão."
+        },
+        {
+          "passo": "Passo 04",
+          "resultado_esperado_verdadeiro_positivo": "Payloads com delimitadores/diretivas do template alteram a renderização, provocam erro característico do motor de templates ou permitem acessar objetos/variáveis não destinados ao usuário.",
+          "resultado_esperado_falso_positivo": "Payloads com caracteres especiais de template são codificados, rejeitados por validação de entrada, tratados como texto ou renderizados apenas em contexto seguro, sem erro de parsing nem execução de expressão."
+        },
+        {
+          "passo": "Passo 05",
+          "resultado_esperado_verdadeiro_positivo": "Não há neutralização suficiente, sandbox efetivo ou separação entre template e dados, permitindo que entrada externa seja interpretada como instrução do template.",
+          "resultado_esperado_falso_positivo": "A implementação usa allowlist, escaping contextual, sandbox efetivo do motor de templates ou separação clara entre template estático e dados; não há caminho explorável a partir de entrada externa."
+        }
+      ]
+    }
+  ]
+}

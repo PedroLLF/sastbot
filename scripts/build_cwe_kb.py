@@ -12,10 +12,14 @@ Usage:
     python -m scripts.build_cwe_kb --cwe-ids 89,79,22
 """
 import re
+import io
 import argparse
+import zipfile
 import xml.etree.ElementTree as ET
 from pathlib import Path
 import sys
+from urllib.request import urlopen
+from urllib.error import HTTPError, URLError
 
 sys.path.insert(0, str(Path(__file__).parent.parent))
 
@@ -25,6 +29,43 @@ NS = {"cwe": "http://cwe.mitre.org/cwe-7"}
 
 MITIGATIONS_MAX_CHARS = 3000
 CONSEQUENCES_MAX_ITEMS = 8
+
+
+def _download_cwe_xml(xml_path: Path) -> bool:
+    xml_path.parent.mkdir(parents=True, exist_ok=True)
+
+    candidates = [
+        f"https://cwe.mitre.org/data/xml/{xml_path.name}.zip",
+        "https://cwe.mitre.org/data/xml/cwec_latest.xml.zip",
+    ]
+
+    for url in candidates:
+        try:
+            print(f"Downloading CWE XML from: {url}")
+            with urlopen(url, timeout=60) as response:
+                payload = response.read()
+
+            with zipfile.ZipFile(io.BytesIO(payload)) as archive:
+                xml_members = [name for name in archive.namelist() if name.lower().endswith(".xml")]
+                if not xml_members:
+                    print(f"No XML file found in archive: {url}")
+                    continue
+
+                preferred = next(
+                    (name for name in xml_members if Path(name).name == xml_path.name),
+                    None,
+                )
+                member = preferred or xml_members[0]
+
+                with archive.open(member) as source, xml_path.open("wb") as target:
+                    target.write(source.read())
+
+            print(f"CWE XML downloaded to: {xml_path}")
+            return True
+        except (HTTPError, URLError, TimeoutError, zipfile.BadZipFile) as exc:
+            print(f"Download failed from {url}: {exc}")
+
+    return False
 
 
 def _text(element) -> str:
@@ -139,6 +180,8 @@ def main() -> None:
                              "Overrides --abstraction.")
     parser.add_argument("--clean", action="store_true",
                         help="Delete all existing .txt files in output dir before writing.")
+    parser.add_argument("--no-download", action="store_true",
+                        help="Do not download CWE XML automatically when missing.")
     args = parser.parse_args()
 
     if args.clean and OUTPUT_DIR.exists():
@@ -149,8 +192,10 @@ def main() -> None:
 
     xml_path = Path(args.cwe_xml)
     if not xml_path.exists():
-        print(f"Error: CWE XML not found: {xml_path}")
-        sys.exit(1)
+        print(f"CWE XML not found locally: {xml_path}")
+        if args.no_download or not _download_cwe_xml(xml_path):
+            print(f"Error: CWE XML not found: {xml_path}")
+            sys.exit(1)
 
     print(f"Parsing {xml_path} ({xml_path.stat().st_size // 1024 // 1024} MB)...")
     tree = ET.parse(xml_path)

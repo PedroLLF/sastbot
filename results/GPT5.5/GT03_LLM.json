@@ -1,0 +1,50 @@
+{
+  "test_cases": [
+    {
+      "identificacao": {
+        "id_sonarqube": "typescript:S6268",
+        "arquivo": "juice-shop:frontend/src/app/about/about.component.ts",
+        "linha": 119,
+        "severidade_sast": "CRITICAL",
+        "regra": "Make sure disabling Angular built-in sanitization is safe here.",
+        "categoria": "Cross-Site Scripting / HTML Injection"
+      },
+      "classificacao": {
+        "veredicto": "Requer verificação manual",
+        "cwe": "CWE-83, CWE-87",
+        "owasp_top_10": "A03:2021 - Injection",
+        "wstg": "WSTG-CLNT-03 - Testing for HTML Injection; WSTG-CLNT-15 - Testing for Client-side Template Injection",
+        "justificativa": "O alerta indica uso de API do Angular que desabilita a sanitização nativa, como DomSanitizer.bypassSecurityTrust*. Isso só é vulnerável se o valor marcado como confiável puder ser controlado por usuário, parâmetro externo, API, CMS, armazenamento ou outra fonte não confiável e for renderizado em contexto HTML/URL/atributo. Caso o conteúdo seja constante, estritamente allowlisted ou sanitizado corretamente antes do bypass, o alerta tende a ser falso positivo ou risco aceito."
+      },
+      "descricao_tecnica": "A regra typescript:S6268 aponta que a aplicação desabilita a sanitização embutida do Angular no arquivo frontend/src/app/about/about.component.ts, linha 119. APIs como bypassSecurityTrustHtml, bypassSecurityTrustUrl, bypassSecurityTrustResourceUrl, bypassSecurityTrustScript ou bypassSecurityTrustStyle instruem o Angular a confiar no valor recebido e podem permitir HTML Injection ou DOM XSS quando usadas com dados não confiáveis. A verificação deve confirmar a origem do dado passado ao bypass, o contexto de renderização no template e se payloads com HTML, atributos de evento, javascript: URLs ou sintaxe de template são executados no navegador.",
+      "pre_condicoes_para_verificacao": [
+        "Acesso ao código-fonte do componente frontend/src/app/about/about.component.ts e ao template HTML correspondente.",
+        "Ambiente local ou de teste da aplicação em execução com build equivalente ao analisado pelo SonarQube.",
+        "Capacidade de identificar e manipular a origem do valor passado à chamada que desabilita a sanitização na linha 119.",
+        "Ferramentas de navegador, proxy HTTP ou controle da API/dados de teste para injetar payloads de verificação sem afetar usuários reais."
+      ],
+      "passos_de_verificacao": [
+        {
+          "passo": "Passo 01",
+          "resultado_esperado_verdadeiro_positivo": "O valor passado à API de bypass deriva direta ou indiretamente de entrada controlável, como parâmetro de URL, fragmento, campo de formulário, resposta de API, banco de dados, localStorage/sessionStorage, configuração remota ou conteúdo administrável.",
+          "resultado_esperado_falso_positivo": "O valor passado à API de bypass é constante, definido no código, proveniente de fonte confiável imutável ou não contém qualquer influência de entrada externa."
+        },
+        {
+          "passo": "Passo 02",
+          "resultado_esperado_verdadeiro_positivo": "O valor marcado como confiável é renderizado em contexto sensível, como [innerHTML], src/href de iframe/link/script, style ou atributo que permita execução/interpretação de HTML, URL javascript: ou eventos.",
+          "resultado_esperado_falso_positivo": "O template associado não insere o valor em contexto executável/perigoso, ou o valor é sanitizado por biblioteca robusta e configurada com allowlist antes de ser marcado como confiável."
+        },
+        {
+          "passo": "Passo 03",
+          "resultado_esperado_verdadeiro_positivo": "Ao fornecer payload controlado no ponto de entrada identificado, o navegador interpreta o HTML/atributo/URL/template; por exemplo, um handler onerror/onload executa JavaScript, uma URL javascript: é acionável, ou expressão de template é processada indevidamente.",
+          "resultado_esperado_falso_positivo": "Ao tentar fornecer payloads como <img src=x onerror=alert(1)>, <svg onload=alert(1)>, javascript:alert(1) ou {{7*7}}, o conteúdo é bloqueado, codificado, removido ou exibido como texto inofensivo."
+        },
+        {
+          "passo": "Passo 04",
+          "resultado_esperado_verdadeiro_positivo": "A exploração é reproduzível no fluxo funcional que usa about.component.ts, demonstrando execução de JavaScript no contexto da aplicação ou injeção arbitrária de HTML/DOM a partir de entrada não confiável.",
+          "resultado_esperado_falso_positivo": "A exploração não é reproduzível em navegador real com a aplicação executando, não há execução de script nem alteração arbitrária do DOM, e há evidência documentada de sanitização/allowlist adequada antes do bypass."
+        }
+      ]
+    }
+  ]
+}

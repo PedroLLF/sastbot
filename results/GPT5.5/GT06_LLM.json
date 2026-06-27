@@ -1,0 +1,51 @@
+{
+  "test_cases": [
+    {
+      "identificacao": {
+        "id_sonarqube": "typescript:S5122",
+        "arquivo": "juice-shop:server.ts",
+        "linha": 182,
+        "severidade_sast": "MINOR",
+        "regra": "Make sure that enabling CORS is safe here.",
+        "categoria": "Configuração de CORS / Security Hotspot"
+      },
+      "classificacao": {
+        "veredicto": "Necessita verificação manual",
+        "cwe": "CWE-942; CWE-1385 se a mesma configuração aceitar conexões WebSocket sem validaçãode Origin",
+        "owasp_top_10": "A05:2021 - Security Misconfiguration",
+        "wstg": "WSTG-CLNT-07 - Testing Cross Origin Resource Sharing",
+        "justificativa": "A chamada sinalizada habilita CORS, o que é um Security Hotspot: não comprova vulnerabilidade por si só. Será verdadeiro positivo apenas se a configuração permitir origensnão confiáveis, refletir qualquer Origin, usar wildcard de forma indevida, permitir credenciais para origens arbitrárias ou expor endpoints sensíveis a leitura/ações cross-origin. Será falso positivo se houver allowlist restritiva de origens confiáveis, sem credenciais indevidas, ou se os recursos expostos forem intencionalmente públicos e sem impacto de segurança."
+      },
+      "descricao_tecnica": "O alerta typescript:S5122 em server.ts:182 indica habilitação de CORS.A verificação deve confirmar se a aplicação responde a requisições com Origin externo não confiável usando cabeçalhos como Access-Control-Allow-Origin permissivo, reflexão de Origin ou Access-Control-Allow-Credentials: true. O risco principal é permitir que um site controlado por atacante leia respostas ou execute ações autenticadas no contexto do usuário, dependendo dos endpoints, cookies/tokens e política de credenciais.",
+      "pre_condicoes_para_verificacao": [
+        "Acesso ao arquivo server.ts e ao trecho próximo da linha 182 para revisar a configuração CORS efetiva.",
+        "Ambiente da aplicação em execução com URL base conhecida.",
+        "Capacidade de enviar requisições HTTP customizadas com cabeçalho Origin, por exemplo via curl, proxy interceptador ou cliente HTTP.",
+        "Conta de teste e sessão autenticada, caso os endpoints relevantes dependam de autenticação.",
+        "Lista de origens/domínios considerados confiáveis pela aplicação, se existir."
+      ],
+      "passos_de_verificacao": [
+        {
+          "passo": "Passo 01",
+          "resultado_esperado_verdadeiro_positivo": "O código mostra uso permissivo, por exemplo cors() sem restrições, origin: '*', reflexão dinâmica sem validação, ou credentials: true combinado com origens não confiáveis.",
+          "resultado_esperado_falso_positivo": "A configuração usa allowlist explícita de origens confiáveis, não usa wildcard para endpoints sensíveis e não reflete automaticamente qualquer Originrecebido."
+        },
+        {
+          "passo": "Passo 02",
+          "resultado_esperado_verdadeiro_positivo": "Ao enviar uma requisição com Origin: https://attacker.example, a aplicação responde com Access-Control-Allow-Origin: * ou Access-Control-Allow-Origin: https://attacker.example. Se houver cookies/sessão envolvidos, também retorna Access-Control-Allow-Credentials: true.",
+          "resultado_esperado_falso_positivo": "Para Origin não confiável, a resposta não contém Access-Control-Allow-Origin, retorna origem confiável diferente, ou nega a preflight; Access-Control-Allow-Credentials não é habilitado indevidamente."
+        },
+        {
+          "passo": "Passo 03",
+          "resultado_esperado_verdadeiro_positivo": "A preflight OPTIONS de origem não confiável éautorizada e retorna Access-Control-Allow-Methods e Access-Control-Allow-Headers permitindo chamadas que acessam ou alteram dados sensíveis.",
+          "resultado_esperado_falso_positivo": "A preflight OPTIONS para métodos/headers sensíveisde uma origem não confiável é negada ou não autoriza métodos perigosos/headers de autenticação para essa origem."
+        },
+        {
+          "passo": "Passo 04",
+          "resultado_esperado_verdadeiro_positivo": "Uma página hospedada em origem não confiável consegue executar fetch/XMLHttpRequest contra a aplicação e ler a resposta de endpoints sensíveis ou autenticados no contexto da vítima.",
+          "resultado_esperado_falso_positivo": "Uma prova em navegador a partir de domínio não confiável não consegue ler respostas autenticadas/sensíveis devido à política CORS restritiva, ausência de credenciais aceitas ou proteção adicional adequada."
+        }
+      ]
+    }
+  ]
+}

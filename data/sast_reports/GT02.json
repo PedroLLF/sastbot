@@ -1,0 +1,54 @@
+{
+    "generated_at": "2026-06-27T16:55:56.515987+00:00",
+    "project": "juice-shop",
+    "report_url": "http://localhost:9000/project/issues?issues=6d4ecb57-73d4-482f-ae9c-2728da3971bb&open=6d4ecb57-73d4-482f-ae9c-2728da3971bb&id=juice-shop",
+    "issue_key": "6d4ecb57-73d4-482f-ae9c-2728da3971bb",
+    "hotspot_lookup_error": "Erro na API: 404 - {\"errors\":[{\"msg\":\"Hotspot \\u00276d4ecb57-73d4-482f-ae9c-2728da3971bb\\u0027 does not exist\"}]}",
+    "total": 1,
+    "issues": [
+        {
+            "key": "6d4ecb57-73d4-482f-ae9c-2728da3971bb",
+            "rule": "secrets:S6706",
+            "severity": "BLOCKER",
+            "component": "juice-shop:lib/insecurity.ts",
+            "project": "juice-shop",
+            "line": 23,
+            "hash": "648b1c2b0817f9c92f0cadebbe3e4bdf",
+            "textRange": {
+                "startLine": 23,
+                "endLine": 23,
+                "startOffset": 20,
+                "endOffset": 51
+            },
+            "flows": [],
+            "status": "OPEN",
+            "message": "Make sure this private key gets revoked, changed, and removed from the code.",
+            "effort": "30min",
+            "debt": "30min",
+            "author": "",
+            "tags": [
+                "cwe"
+            ],
+            "creationDate": "2026-04-16T12:43:20+0000",
+            "updateDate": "2026-04-16T12:43:20+0000",
+            "type": "VULNERABILITY",
+            "scope": "MAIN",
+            "quickFixAvailable": false,
+            "messageFormattings": [],
+            "codeVariants": [],
+            "cleanCodeAttribute": "TRUSTWORTHY",
+            "cleanCodeAttributeCategory": "RESPONSIBLE",
+            "impacts": [
+                {
+                    "softwareQuality": "SECURITY",
+                    "severity": "BLOCKER"
+                }
+            ],
+            "issueStatus": "OPEN",
+            "prioritizedRule": false,
+            "fromSonarQubeUpdate": false,
+            "internalTags": [],
+            "linkedTicketStatus": "NOT_LINKED"
+        }
+    ]
+}
