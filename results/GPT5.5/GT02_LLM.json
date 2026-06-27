@@ -1,0 +1,56 @@
+{
+  "test_cases": [
+    {
+      "identificacao": {
+        "id_sonarqube": "6d4ecb57-73d4-482f-ae9c-2728da3971bb",
+        "arquivo": "juice-shop:lib/insecurity.ts",
+        "linha": 23,
+        "severidade_sast": "BLOCKER",
+        "regra": "secrets:S6706",
+        "categoria": "Hardcoded Secret / Private Key"
+      },
+      "classificacao": {
+        "veredicto": "A verificar",
+        "cwe": "CWE-321: Use of Hard-coded Cryptographic Key / CWE-798: Use of Hard-coded Credentials",
+        "owasp_top_10": "A02:2021 - Cryptographic Failures",
+        "wstg": "WSTG-CRYP-04 - Testing for Weak Encryption",
+        "justificativa": "O alerta indica presença de uma chave privada no código-fonte em lib/insecurity.ts:23. Se o conteúdo for uma chave privada real, mesmo que usada apenas para assinatura, teste ou desenvolvimento, sua exposição no repositório permite cópia por qualquer pessoa com acesso ao código e pode comprometer tokens, assinaturas, sessões ou comunicações protegidas. A confirmação depende de verificar se há material criptográfico privado real, se é usado pela aplicação e se o repositório/artefato é acessível fora de um ambiente estritamente controlado."
+      },
+      "descricao_tecnica": "Foi identificado pelo SonarQube um possível segredo do tipo chave privada hardcoded no arquivo lib/insecurity.ts, linha 23. Chaves privadas não devem ser armazenadas diretamente no código-fonte, pois podem ser vazadas via repositório, logs, artefatos de build, imagensde contêiner ou pacotes publicados. A verificação deve confirmar se a linha contém uma chave privada real ou material de teste/placeholder, se a chave é utilizada em algum fluxo de segurança da aplicação e se há necessidade de revogação, rotação e remoção do histórico do repositório.",
+      "pre_condicoes_para_verificacao": [
+        "Acesso de leitura ao repositório contendo o componente juice-shop:lib/insecurity.ts.",
+        "Permissão para inspecionar o arquivo lib/insecurity.ts na linha 23 e o histórico Git relacionado.",
+        "Acesso aos resultados completos do SonarQube para a regra secrets:S6706.",
+        "Capacidade de realizar busca no código por referências ao valor, nome da variável, funçãoou arquivo onde a chave está definida.",
+        "Contato com o responsável técnico para confirmar se a chave é de produção, teste, demonstração ou placeholder."
+      ],
+      "passos_de_verificacao": [
+        {
+          "passo": "Passo 01",
+          "resultado_esperado_verdadeiro_positivo": "A linha 23 contém material com formato de chave privada, por exemplo bloco PEM como -----BEGIN PRIVATE KEY-----, -----BEGIN RSA PRIVATE KEY-----, chave EC/DSA, ou conteúdo equivalente codificado.",
+          "resultado_esperado_falso_positivo": "A linha não contém uma chave privada real; trata-se de texto fictício, exemplo não funcional, placeholder claramente inválido ou dado sintético que não pode ser usado criptograficamente."
+        },
+        {
+          "passo": "Passo 02",
+          "resultado_esperado_verdadeiro_positivo": "A chave é referenciada pelo código ou configuração e é usada para assinar/verificar tokens, descriptografar dados, estabelecer TLS, assinar artefatos, autenticar serviços ou executar qualquer operação criptográfica sensível.",
+          "resultado_esperado_falso_positivo": "Não há uso funcional da chave pela aplicação, testes, scripts, build ou configuração; o valor não é carregado, importado ou referenciado em fluxos deautenticação, assinatura, criptografia ou transporte."
+        },
+        {
+          "passo": "Passo 03",
+          "resultado_esperado_verdadeiro_positivo": "A mesma chave existe no repositório, histórico Git, imagens, pacotes, pipelines ou artefatos acessíveis a desenvolvedores, terceiros ou ambientes não produtivos/produtivos, caracterizando exposição do segredo.",
+          "resultado_esperado_falso_positivo": "A chave é comprovadamente descartável, gerada dinamicamente em ambiente isolado, não está presente em branches/artefatos distribuídos e não protege nenhum recurso real ou compartilhado."
+        },
+        {
+          "passo": "Passo 04",
+          "resultado_esperado_verdadeiro_positivo": "É possível associar a chave a um certificado,par público, token, serviço, conta, ambiente ou mecanismo real da aplicação; portanto, a chave deve ser considerada comprometida e passar por revogação/rotação.",
+          "resultado_esperado_falso_positivo": "Não há impacto prático demonstrável: a chave não corresponde a nenhum certificado, token, serviço, ambiente ou mecanismo de segurança ativo; a equipeconfirma que é apenas dado de demonstração sem confiança associada."
+        },
+        {
+          "passo": "Passo 05",
+          "resultado_esperado_verdadeiro_positivo": "A correção esperada é remover a chave do código, armazená-la em cofre de segredos ou variável segura, rotacionar/revogar a chave exposta, revisar o histórico do repositório e validar que novos commits não contenham o segredo.",
+          "resultado_esperado_falso_positivo": "A correção aceitável é documentar a razão do falsopositivo e, se apropriado, substituir o conteúdo por um mock claramente inválido para evitar novosalertas."
+        }
+      ]
+    }
+  ]
+}

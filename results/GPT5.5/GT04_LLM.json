@@ -1,0 +1,51 @@
+{
+  "test_cases": [
+    {
+      "identificacao": {
+        "id_sonarqube": "74de4cdb-5256-48b1-97af-c47eaa500ecc",
+        "arquivo": "juice-shop:routes/userProfile.ts",
+        "linha": 87,
+        "severidade_sast": "MAJOR",
+        "regra": "typescript:S7790",
+        "categoria": "Server-Side Template Injection (SSTI)"
+      },
+      "classificacao": {
+        "veredicto": "A verificar",
+        "cwe": "CWE-1336 - Improper Neutralization of Special Elements Used in a Template Engine",
+        "owasp_top_10": "A03:2021 - Injection",
+        "wstg": "WSTG-INPV-18 - Testing for Server-Side Template Injection",
+        "justificativa": "O alerta indica uso de template formatado dinamicamente em routes/userProfile.ts. Caso dados controláveis pelo usuário sejam incorporados em um template e posteriormente interpretados por um mecanismo de template sem escaping, allowlist ou separação adequada entre dadose template, pode haver Server-Side Template Injection. A confirmação depende de verificar a origemdos dados usados na linha indicada e se eles alcançam um sink de renderização/compilação de template."
+      },
+      "descricao_tecnica": "A regra typescript:S7790 sinaliza construção/formatação dinâmica de template. O teste deve verificar se, na linha 87 de routes/userProfile.ts, existe interpolação de conteúdo controlável pelo usuário em uma string de template que será interpretada por um template engine. Se uma expressão de template enviada pelo usuário for avaliada no servidor, o achado é verdadeiro positivo. Se o conteúdo for estático, proveniente apenas de constantes confiáveis, ou tratado como dado escapado/literal sem avaliação pelo engine, o achado tende a ser falso positivo.",
+      "pre_condicoes_para_verificacao": [
+        "Acesso ao código-fonte do componente juice-shop:routes/userProfile.ts na versão analisadapelo SonarQube.",
+        "Ambiente local ou de homologação da aplicação disponível para testes, sem afetar produção.",
+        "Conta de teste e permissões necessárias para acessar ou alterar dados de perfil, caso a rota exija autenticação.",
+        "Conhecimento do template engine utilizado pela aplicação para escolher payloads benignos compatíveis.",
+        "Logs da aplicação e capacidade de inspecionar respostas HTTP para identificar avaliação de expressões ou erros de template."
+      ],
+      "passos_de_verificacao": [
+        {
+          "passo": "Passo 01",
+          "resultado_esperado_verdadeiro_positivo": "A linha 87 monta dinamicamente um template oufragmento de template usando dados que podem ser controlados por usuário, como campos de perfil, parâmetros de rota, corpo da requisição, query string, cookies ou dados persistidos previamente.",
+          "resultado_esperado_falso_positivo": "A linha 87 utiliza apenas template estático ou valores internos confiáveis, sem concatenação/interpolação de entradas controláveis pelo usuário, ou os valores são passados ao template engine como dados escapados/literais."
+        },
+        {
+          "passo": "Passo 02",
+          "resultado_esperado_verdadeiro_positivo": "O dado controlável alcança uma função de renderização, compilação ou avaliação de template sem validação/escaping suficiente, permitindo que sintaxe do template engine seja interpretada no servidor.",
+          "resultado_esperado_falso_positivo": "Mesmo que haja dados do usuário no fluxo, eles sãonormalizados por allowlist restritiva, escapados corretamente para o contexto do template e não são usados como código/template a ser compilado ou renderizado."
+        },
+        {
+          "passo": "Passo 03",
+          "resultado_esperado_verdadeiro_positivo": "Ao inserir payloads benignos de SSTI em campos controláveis do perfil, a resposta renderizada ou os logs indicam avaliação da expressão pelo template engine, por exemplo retorno de um resultado calculado em vez do texto literal enviado.",
+          "resultado_esperado_falso_positivo": "Ao inserir payloads benignos de SSTI em campos controláveis do perfil, por exemplo expressões aritméticas compatíveis com o template engine em uso, aaplicação exibe o payload como texto literal ou escapado, sem calcular a expressão e sem erros relevantes de template."
+        },
+        {
+          "passo": "Passo 04",
+          "resultado_esperado_verdadeiro_positivo": "A avaliação controlada confirma que sintaxe de template enviada pelo usuário é processada no servidor. Classificar como verdadeiro positivo e recomendar remover templates dinâmicos controláveis pelo usuário, separar dados de templates, aplicarallowlist e escaping contextual.",
+          "resultado_esperado_falso_positivo": "Não há evidência de execução/interpretação de sintaxe de template controlada pelo usuário e o comportamento permanece consistente com saída codificada ou tratamento como texto simples."
+        }
+      ]
+    }
+  ]
+}

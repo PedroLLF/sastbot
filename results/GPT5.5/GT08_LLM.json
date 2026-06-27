@@ -1,0 +1,50 @@
+{
+  "test_cases": [
+    {
+      "identificacao": {
+        "id_sonarqube": "fe05cc96-7ed2-4ea0-9c61-48e5a0304238",
+        "arquivo": "juice-shop:lib/insecurity.ts",
+        "linha": 44,
+        "severidade_sast": "BLOCKER",
+        "regra": "typescript:S6437",
+        "categoria": "Credencial hardcoded / senha comprometida"
+      },
+      "classificacao": {
+        "veredicto": "A verificar",
+        "cwe": "CWE-798 - Use of Hard-coded Credentials",
+        "owasp_top_10": "A07:2021 - Identification and Authentication Failures",
+        "wstg": "WSTG-ATHN-02 - Testing for Default Credentials",
+        "justificativa": "O alerta indica a presença de uma senha comprometida em texto claro no código-fonte. Se o valor na linha indicada for uma credencial real, reutilizável ou utilizada pela aplicação em ambiente executável, trata-se de verdadeiro positivo, pois expõe segredo sensível e exige revogação/rotação. Pode ser falso positivo apenas se o valor for comprovadamente fictício, não funcional, usado exclusivamente em teste/demonstração e ausente de qualquer ambiente produtivo."
+      },
+      "descricao_tecnica": "A regra typescript:S6437 reporta uma senha comprometida ou sensível hardcoded no arquivo lib/insecurity.ts, linha 44. A verificação deve confirmar se há um literal de senha/credencial no código, se ele é utilizado por fluxos de autenticação, inicialização de usuários,configuração de serviços ou outras rotinas executadas, e se o segredo precisa ser revogado e substituído por mecanismo seguro de configuração, como variável de ambiente, cofre de segredos ou secretmanager.",
+      "pre_condicoes_para_verificacao": [
+        "Acesso de leitura ao repositório ou ao arquivo juice-shop:lib/insecurity.ts na versão analisada pelo SonarQube.",
+        "Acesso ao resultado completo do SonarQube para confirmar a linha 44 e o trecho sinalizado, sem expor a senha em registros desnecessários.",
+        "Capacidade de pesquisar referências ao valor ou à constante no código-fonte.",
+        "Conhecimento do escopo de implantação da aplicação para diferenciar código produtivo, exemplo, teste ou fixture."
+      ],
+      "passos_de_verificacao": [
+        {
+          "passo": "Passo 01",
+          "resultado_esperado_verdadeiro_positivo": "A linha 44 contém uma senha ou valor de credencial em texto claro no código-fonte.",
+          "resultado_esperado_falso_positivo": "A linha 44 não contém senha, token, chave ou valorsensível real; ou contém apenas valor de exemplo inequivocamente fictício, sem capacidade de autenticação e não utilizado por nenhum fluxo executável."
+        },
+        {
+          "passo": "Passo 02",
+          "resultado_esperado_verdadeiro_positivo": "A credencial é referenciada por código executável, por exemplo em autenticação, criação de usuário, configuração de serviço, seed de dados ou comparação de senha.",
+          "resultado_esperado_falso_positivo": "A busca por referências mostra que o valor não é importado, carregado, usado em autenticação, provisionamento de usuários, conexão a serviços ou configuração em qualquer ambiente executável."
+        },
+        {
+          "passo": "Passo 03",
+          "resultado_esperado_verdadeiro_positivo": "O arquivo faz parte do artefato da aplicação ou do repositório principal e pode ser acessado por desenvolvedores, pipelines, builds ou ambientesimplantados, expondo a senha.",
+          "resultado_esperado_falso_positivo": "Há evidência documentada de que o arquivo/valor é restrito a teste local, demonstração isolada ou fixture sem implantação, sem acesso a sistemas reais e sem reutilização em ambientes compartilhados."
+        },
+        {
+          "passo": "Passo 04",
+          "resultado_esperado_verdadeiro_positivo": "A senha precisa ser considerada comprometida:deve ser revogada/alterada, removida do histórico ou tratada conforme processo de gestão de segredos, e substituída por referência segura fora do código.",
+          "resultado_esperado_falso_positivo": "Não há necessidade de rotação porque o valor nuncafoi segredo real, nunca foi válido e não autentica contra nenhum sistema ou usuário."
+        }
+      ]
+    }
+  ]
+}

@@ -1,0 +1,54 @@
+{
+    "generated_at": "2026-06-27T17:47:42.399775+00:00",
+    "project": "juice-shop",
+    "report_url": "http://localhost:9000/project/issues?issues=8a61c8f6-3bef-4b6e-9787-a9479df9ef26&open=8a61c8f6-3bef-4b6e-9787-a9479df9ef26&id=juice-shop",
+    "issue_key": "8a61c8f6-3bef-4b6e-9787-a9479df9ef26",
+    "hotspot_lookup_error": "Erro na API: 404 - {\"errors\":[{\"msg\":\"Hotspot \\u00278a61c8f6-3bef-4b6e-9787-a9479df9ef26\\u0027 does not exist\"}]}",
+    "total": 1,
+    "issues": [
+        {
+            "key": "8a61c8f6-3bef-4b6e-9787-a9479df9ef26",
+            "rule": "typescript:S2068",
+            "severity": "MAJOR",
+            "component": "juice-shop:frontend/src/app/login/login.component.ts",
+            "project": "juice-shop",
+            "line": 61,
+            "hash": "e1fc8d44f1e154da300c601b3dc15c47",
+            "textRange": {
+                "startLine": 61,
+                "endLine": 61,
+                "startOffset": 27,
+                "endOffset": 46
+            },
+            "flows": [],
+            "status": "OPEN",
+            "message": "Review this potentially hard-coded password.",
+            "effort": "30min",
+            "debt": "30min",
+            "author": "",
+            "tags": [
+                "cwe"
+            ],
+            "creationDate": "2026-04-16T12:43:20+0000",
+            "updateDate": "2026-04-16T12:43:20+0000",
+            "type": "VULNERABILITY",
+            "scope": "MAIN",
+            "quickFixAvailable": false,
+            "messageFormattings": [],
+            "codeVariants": [],
+            "cleanCodeAttribute": "TRUSTWORTHY",
+            "cleanCodeAttributeCategory": "RESPONSIBLE",
+            "impacts": [
+                {
+                    "softwareQuality": "SECURITY",
+                    "severity": "MEDIUM"
+                }
+            ],
+            "issueStatus": "OPEN",
+            "prioritizedRule": false,
+            "fromSonarQubeUpdate": false,
+            "internalTags": [],
+            "linkedTicketStatus": "NOT_LINKED"
+        }
+    ]
+}

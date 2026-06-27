@@ -1,0 +1,51 @@
+{
+  "test_cases": [
+    {
+      "identificacao": {
+        "id_sonarqube": "6829619d-3476-446f-8922-d2cb10e8a2c7",
+        "arquivo": "juice-shop:server.ts",
+        "linha": 182,
+        "severidade_sast": "MINOR",
+        "regra": "typescript:S5122",
+        "categoria": "Security Hotspot - CORS / Security Misconfiguration"
+      },
+      "classificacao": {
+        "veredicto": "A verificar",
+        "cwe": "CWE-942: Permissive Cross-domain Policy with Untrusted Domains",
+        "owasp_top_10": "OWASP Top 10 2021 A05: Security Misconfiguration",
+        "wstg": "WSTG-CLNT-07: Testing Cross Origin Resource Sharing",
+        "justificativa": "O alerta é um Security Hotspot indicando uso de CORS em server.ts:182. Aconfirmação depende da configuração efetiva em tempo de execução: será verdadeiro positivo se a aplicação permitir origens arbitrárias ou não confiáveis, especialmente com credenciais e endpoints sensíveis; será falso positivo ou risco aceito se houver allowlist restritiva, ausência de credenciais e/ou apenas recursos públicos expostos."
+      },
+      "descricao_tecnica": "A regra typescript:S5122 sinaliza a habilitação de CORS. CORS mal configurado pode permitir que um site controlado por atacante leia respostas da aplicação a partir do navegador da vítima quando a aplicação retorna cabeçalhos permissivos como Access-Control-Allow-Origin refletindo qualquer Origin ou '*' combinado indevidamente com fluxos autenticados. A verificaçãodeve confirmar se a linha 182 habilita CORS de forma global/permissiva, se há lista de origens confiáveis, se Access-Control-Allow-Credentials é usado, e se endpoints com dados sensíveis podem ser acessados a partir de uma origem não confiável.",
+      "pre_condicoes_para_verificacao": [
+        "Acesso ao arquivo juice-shop:server.ts e à configuração relacionada a CORS no projeto.",
+        "Aplicação executando em ambiente controlado de teste ou homologação.",
+        "Ferramenta para enviar requisições HTTP com cabeçalho Origin customizado, como curl, BurpSuite, Postman ou navegador com página de teste.",
+        "Conta de teste autenticada, se a aplicação possuir endpoints protegidos por sessão/cookie/token.",
+        "Identificação de ao menos um endpoint que retorne dados sensíveis ou específicos do usuário para validar impacto."
+      ],
+      "passos_de_verificacao": [
+        {
+          "passo": "Passo 01",
+          "resultado_esperado_verdadeiro_positivo": "O código em server.ts:182 habilita CORS de forma global/permissiva, por exemplo usando cors() sem restrições, origin: '*', reflexão dinâmica de Origin sem validação, regex ampla, ou credentials: true com origens não confiáveis.",
+          "resultado_esperado_falso_positivo": "O código usa uma allowlist explícita de origens confiáveis, valida exatamente scheme/host/porta, não reflete qualquer Origin recebido e não habilita credenciais para origens não confiáveis."
+        },
+        {
+          "passo": "Passo 02",
+          "resultado_esperado_verdadeiro_positivo": "Ao enviar requisição HTTP/OPTIONS ou GET com Origin como https://evil.example, a aplicação responde com Access-Control-Allow-Origin: https://evil.example ou '*'. Se houver autenticação por cookie/token em navegador, também retorna Access-Control-Allow-Credentials: true para origem não confiável.",
+          "resultado_esperado_falso_positivo": "Ao enviar requisição com Origin não confiável, a resposta não contém Access-Control-Allow-Origin para essa origem, não retorna Access-Control-Allow-Credentials: true, ou bloqueia a origem conforme a allowlist configurada."
+        },
+        {
+          "passo": "Passo 03",
+          "resultado_esperado_verdadeiro_positivo": "Com uma sessão válida da vítima ou credenciais equivalentes em ambiente de teste, uma página hospedada em origem não confiável consegue fazer fetch/XMLHttpRequest para endpoint sensível da aplicação e ler o conteúdo da resposta devido aos cabeçalhos CORS permissivos.",
+          "resultado_esperado_falso_positivo": "Um endpoint autenticado ou sensível não pode ser lido por JavaScript executado em origem não confiável; o navegador bloqueia a leitura por CORS ou a resposta não contém dados sensíveis acessíveis."
+        },
+        {
+          "passo": "Passo 04",
+          "resultado_esperado_verdadeiro_positivo": "A configuração permissiva aplica-se a endpoints que retornam dados de usuário, informações administrativas, tokens, pedidos, perfil, carrinho ouqualquer informação sensível, tornando possível exposição cross-origin.",
+          "resultado_esperado_falso_positivo": "A configuração permissiva, se existente, aplica-sesomente a endpoints públicos sem dados sensíveis e sem credenciais, com justificativa documentada e controles compensatórios adequados."
+        }
+      ]
+    }
+  ]
+}

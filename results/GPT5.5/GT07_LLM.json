@@ -1,0 +1,50 @@
+{
+  "test_cases": [
+    {
+      "identificacao": {
+        "id_sonarqube": "8a61c8f6-3bef-4b6e-9787-a9479df9ef26",
+        "arquivo": "juice-shop:frontend/src/app/login/login.component.ts",
+        "linha": 61,
+        "severidade_sast": "MAJOR",
+        "regra": "typescript:S2068",
+        "categoria": "VULNERABILITY"
+      },
+      "classificacao": {
+        "veredicto": "Necessita verificação",
+        "cwe": "CWE-798: Use of Hard-coded Credentials",
+        "owasp_top_10": "A07:2021 - Identification and Authentication Failures",
+        "wstg": "WSTG-CONF-04 - Review Old Backup and Unreferenced Files for Sensitive Information",
+        "justificativa": "A regra typescript:S2068 indica a possível presença de uma senha ou segredo codificado diretamente no arquivo TypeScript do frontend. Como o alerta está em código cliente,a exposição seria mais crítica se o valor for uma credencial real, segredo reutilizável, token, senha padrão ou senha de conta de teste válida. Deve ser triado verificando o contexto da linha 61 e se o valor é efetivamente sensível ou apenas um texto não secreto, placeholder, label ou dado de teste sem validade."
+      },
+      "descricao_tecnica": "O SonarQube reportou um potencial hard-coded password em frontend/src/app/login/login.component.ts na linha 61. Senhas, tokens ou segredos embutidos no código-fonte, especialmente em código frontend entregue ao navegador, podem ser extraídos por qualquer usuário com acesso à aplicação ou ao repositório. A verificação deve confirmar se o valor identificado é uma credencial real ou funcional e se há exposição no bundle gerado da aplicação.",
+      "pre_condicoes_para_verificacao": [
+        "Acesso ao repositório ou ao arquivo frontend/src/app/login/login.component.ts na revisão analisada pelo SonarQube.",
+        "Permissão para inspecionar a linha 61 e o contexto de uso do valor reportado.",
+        "Ambiente de teste autorizado, caso seja necessário validar se o valor funciona como credencial.",
+        "Build local ou acesso aos artefatos gerados do frontend, caso seja necessário verificar exposição no bundle entregue ao navegador."
+      ],
+      "passos_de_verificacao": [
+        {
+          "passo": "Passo 01",
+          "resultado_esperado_verdadeiro_positivo": "A linha 61 contém uma senha, token, segredo, credencial padrão ou valor autenticável codificado diretamente no arquivo login.component.ts.",
+          "resultado_esperado_falso_positivo": "A linha 61 não contém uma senha, token ou segredo real; o valor identificado é apenas texto de interface, nome de campo, exemplo inofensivo, placeholder sem validade, constante não sensível ou dado usado exclusivamente em teste sem impacto em ambiente real."
+        },
+        {
+          "passo": "Passo 02",
+          "resultado_esperado_verdadeiro_positivo": "O valor é usado diretamente ou indiretamente em fluxo de login, autenticação automática, preenchimento de credenciais, integração com API, contade demonstração funcional ou qualquer mecanismo que possa conceder acesso.",
+          "resultado_esperado_falso_positivo": "O valor não é usado em nenhum fluxo de autenticação, autorização, integração, acesso administrativo ou comunicação com serviços externos; não concedeacesso nem altera comportamento de segurança."
+        },
+        {
+          "passo": "Passo 03",
+          "resultado_esperado_verdadeiro_positivo": "O valor aparece no código JavaScript/artefatos estáticos entregues ao navegador, permitindo que um usuário o recupere por DevTools, arquivos de build ou busca no bundle.",
+          "resultado_esperado_falso_positivo": "Mesmo após build da aplicação, o valor não apareceno bundle distribuído ou é comprovadamente um artefato não sensível sem utilidade para autenticação."
+        },
+        {
+          "passo": "Passo 04",
+          "resultado_esperado_verdadeiro_positivo": "Em ambiente autorizado, o valor permite autenticação, acesso a conta, bypass, uso de credencial padrão ou acesso a recurso protegido.",
+          "resultado_esperado_falso_positivo": "A tentativa controlada de uso do valor em ambienteautorizado não autentica, não concede acesso e não corresponde a nenhuma credencial válida conhecida."
+        }
+      ]
+    }
+  ]
+}
