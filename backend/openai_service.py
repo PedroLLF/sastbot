@@ -1,29 +1,47 @@
 from openai import OpenAI
 from .config import settings
-from .schemas import SonarIssue, SecurityTestReportLLM
+from .schemas import SonarIssue, SecurityTestReport
 from .chroma_service import RetrievedDoc
 
 _client = OpenAI(api_key=settings.openai_api_key)
 
-_SYSTEM_PROMPT = """You are a senior application security engineer specializing in security test case design.
+_SYSTEM_PROMPT = """You are a senior AppSec/SAST analyst.
 
-You receive a list of SAST findings, each with:
-- Associated CWE and WSTG reference documentation (retrieved from a knowledge base)
-- Optionally, the actual vulnerable source code at the flagged location
+Your task is to analyze a SonarQube alert and create a test case for verification and triage based on the fields below.
 
-For EACH finding, generate exactly one structured security test case grounded in the provided documentation.
-When source code is provided, tailor the test steps and preconditions to the specific implementation
-(reference actual method names, parameter names, endpoints, and patterns visible in the code).
+Return valid JSON only.
 
-Rules:
-- test_id: sequential "TC-001", "TC-002", ... matching the order of findings
-- finding_rule and finding_message: copy verbatim from the input finding
-- title: concise action phrase (≤10 words)
-- objective: what security property this test verifies
-- preconditions: concrete setup requirements derived from the finding, documentation, and code (if provided)
-- steps: numbered, executable test steps informed by the WSTG methodology and actual code patterns
-- expected_result: the secure behavior that MUST be observed for the test to pass
-- severity: map from SonarQube severity (BLOCKER/CRITICAL→Critical, MAJOR→High, MINOR→Medium, INFO→Info)
+The JSON must match this structure exactly:
+{
+    "test_cases": [
+        {
+            "identificacao": {
+                "id_sonarqube": "...",
+                "arquivo": "...",
+                "linha": 0,
+                "severidade_sast": "...",
+                "regra": "...",
+                "categoria": "..."
+            },
+            "classificacao": {
+                "veredicto": "...",
+                "cwe": "...",
+                "owasp_top_10": "...",
+                "wstg": "...",
+                "justificativa": "..."
+            },
+            "descricao_tecnica": "...",
+            "pre_condicoes_para_verificacao": ["..."],
+            "passos_de_verificacao": [
+                {
+                    "passo": "Passo 01",
+                    "resultado_esperado_verdadeiro_positivo": "...",
+                    "resultado_esperado_falso_positivo": "..."
+                }
+            ]
+        }
+    ]
+}
 
 Do not invent findings. Generate one test case per finding, in the same order."""
 
@@ -59,7 +77,7 @@ def generate_test_cases(
     user_context: str,
     retrieved_per_finding: list[list[RetrievedDoc]],
     code_snippets: list[str | None],
-) -> SecurityTestReportLLM:
+) -> SecurityTestReport:
     # Pad snippets list to match issues length (missing entries treated as None)
     snippets = list(code_snippets) + [None] * max(0, len(issues) - len(code_snippets))
 
@@ -78,7 +96,7 @@ def generate_test_cases(
             {"role": "system", "content": _SYSTEM_PROMPT},
             {"role": "user", "content": user_content},
         ],
-        response_format=SecurityTestReportLLM,
+        response_format=SecurityTestReport,
     )
 
     choice = response.choices[0]
