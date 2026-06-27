@@ -1,5 +1,6 @@
 from typing import Literal
-from pydantic import BaseModel
+
+from pydantic import BaseModel, Field
 
 
 # ── SonarQube input ──────────────────────────────────────────────────────────
@@ -21,43 +22,48 @@ class SonarIssue(BaseModel):
     message: str
     type: str | None = None
     status: str | None = None
-    tags: list[str] = []
+    tags: list[str] = Field(default_factory=list)
 
 
 class SonarReport(BaseModel):
     issues: list[SonarIssue]
 
 
-# ── RAG retrieved document ────────────────────────────────────────────────────
+# ── LLM output ───────────────────────────────────────────────────────────────
 
-class RetrievedDocument(BaseModel):
-    id: str                          # "CWE-89" or "WSTG-INPV-05"
-    source: Literal["CWE", "WSTG"]
-    title: str
-
-
-# ── LLM structured output (no retrieved_context — injected by code) ───────────
-
-class SecurityTestCaseLLM(BaseModel):
-    test_id: str
-    finding_rule: str
-    finding_message: str
-    title: str
-    objective: str
-    preconditions: list[str]
-    steps: list[str]
-    expected_result: str
-    severity: Literal["Critical", "High", "Medium", "Low", "Info"]
+class Identificacao(BaseModel):
+    id_sonarqube: str
+    arquivo: str
+    linha: int | str
+    severidade_sast: str
+    regra: str
+    categoria: str
 
 
-class SecurityTestReportLLM(BaseModel):
-    test_cases: list[SecurityTestCaseLLM]
+class Classificacao(BaseModel):
+    veredicto: str
+    cwe: str
+    owasp_top_10: str
+    wstg: str
+    justificativa: str
 
 
-# ── Final output (with traceability) ─────────────────────────────────────────
+class PassoVerificacao(BaseModel):
+    passo: str
+    resultado_esperado_verdadeiro_positivo: str
+    resultado_esperado_falso_positivo: str
 
-class SecurityTestCase(SecurityTestCaseLLM):
-    retrieved_context: list[RetrievedDocument]
+
+class SecurityTestCase(BaseModel):
+    identificacao: Identificacao
+    classificacao: Classificacao
+    descricao_tecnica: str
+    pre_condicoes_para_verificacao: list[str] = Field(default_factory=list)
+    passos_de_verificacao: list[PassoVerificacao] = Field(default_factory=list)
+
+
+class SecurityTestReport(BaseModel):
+    test_cases: list[SecurityTestCase] = Field(default_factory=list)
 
 
 # ── API contracts ─────────────────────────────────────────────────────────────
@@ -68,7 +74,7 @@ class AnalyzeRequest(BaseModel):
 
 
 class AnalyzeResponse(BaseModel):
-    test_cases: list[SecurityTestCase]
+    test_cases: list[SecurityTestCase] = Field(default_factory=list)
 
 
 class ErrorResponse(BaseModel):

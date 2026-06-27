@@ -1,6 +1,6 @@
 from fastapi import FastAPI
 from fastapi.responses import JSONResponse
-from .schemas import AnalyzeRequest, AnalyzeResponse, ErrorResponse, SecurityTestCase, RetrievedDocument
+from .schemas import AnalyzeRequest, AnalyzeResponse, ErrorResponse
 from .chroma_service import query_knowledge
 from .openai_service import generate_test_cases
 
@@ -32,18 +32,4 @@ def analyze(body: AnalyzeRequest):
 
     # LLM: generate test cases grounded in retrieved context
     llm_report = generate_test_cases(issues, body.message, retrieved_per_finding)
-
-    # Merge retrieved doc metadata into final output (not delegated to LLM)
-    test_cases: list[SecurityTestCase] = []
-    for llm_tc, docs in zip(llm_report.test_cases, retrieved_per_finding):
-        test_cases.append(
-            SecurityTestCase(
-                **llm_tc.model_dump(),
-                retrieved_context=[
-                    RetrievedDocument(id=d.id, source=d.source, title=d.title)
-                    for d in docs
-                ],
-            )
-        )
-
-    return AnalyzeResponse(test_cases=test_cases)
+    return AnalyzeResponse(test_cases=llm_report.test_cases)
