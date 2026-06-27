@@ -5,13 +5,20 @@ from datetime import datetime, timezone
 
 SONARQUBE_URL = "http://localhost:9000"
 PROJECT_KEY = "juice-shop"
-TOKEN = ""
+TOKEN = "squ_bed5c45a0eb7022bf8412e4681e33a57017dfb0b"
 
 SEVERITIES = ["BLOCKER", "CRITICAL", "MAJOR", "MINOR", "INFO"]
 STATUSES = ["OPEN", "CONFIRMED", "REOPENED", "RESOLVED", "CLOSED"]
 TYPES = ["VULNERABILITY", "BUG", "CODE_SMELL", "SECURITY_HOTSPOT"]
 
 _PROB_TO_SEVERITY = {"HIGH": "CRITICAL", "MEDIUM": "MAJOR", "LOW": "MINOR"}
+
+
+def build_project_issue_url(issue_key: str, project_key: str = PROJECT_KEY) -> str:
+    return (
+        f"{SONARQUBE_URL}/project/issues"
+        f"?issues={issue_key}&open={issue_key}&id={project_key}"
+    )
 
 
 def normalize_hotspot(h: dict) -> dict:
@@ -51,6 +58,25 @@ def fetch_hotspot(hotspot_key: str) -> dict:
         raise RuntimeError(f"Erro na API: {response.status_code} - {response.text}")
 
     return response.json()
+
+
+def fetch_issue(issue_key: str) -> dict:
+    url = f"{SONARQUBE_URL}/api/issues/search"
+    response = requests.get(
+        url,
+        auth=(TOKEN, ""),
+        params={"issues": issue_key, "componentKeys": PROJECT_KEY, "ps": 1},
+    )
+
+    if response.status_code != 200:
+        raise RuntimeError(f"Erro na API: {response.status_code} - {response.text}")
+
+    data = response.json()
+    issues = data.get("issues", [])
+    if not issues:
+        raise RuntimeError(f"Issue '{issue_key}' não encontrada no projeto '{PROJECT_KEY}'.")
+
+    return issues[0]
 
 
 def fetch_hotspots(project_key: str, status: str | None = None) -> list:
@@ -158,11 +184,21 @@ def save_report(data, output: str, meta: dict):
     if isinstance(data, list):
         issues = data
     else:
-        issues = [normalize_hotspot(data)]
+        if data.get("type") == "SECURITY_HOTSPOT":
+            issues = [normalize_hotspot(data)]
+        else:
+            issues = [data]
+
+    report_url = None
+    if len(issues) == 1 and issues[0].get("key"):
+        report_url = build_project_issue_url(issues[0]["key"])
+    elif issues and issues[0].get("key"):
+        report_url = build_project_issue_url(issues[0]["key"])
 
     report = {
         "generated_at": datetime.now(timezone.utc).isoformat(),
         "project": PROJECT_KEY,
+        "report_url": report_url,
         **meta,
         "total": len(issues),
         "issues": issues,
@@ -323,8 +359,17 @@ def main():
 
     if args.hotspot:
         print(f"Buscando hotspot '{args.hotspot}'...")
-        data = fetch_hotspot(args.hotspot)
-        save_report(data, args.output, {"hotspot_key": args.hotspot})
+        try:
+            data = fetch_hotspot(args.hotspot)
+            save_report(data, args.output, {"hotspot_key": args.hotspot})
+        except RuntimeError as hotspot_error:
+            print(f"Hotspot não encontrado; tentando como issue SAST: {args.hotspot}")
+            data = fetch_issue(args.hotspot)
+            save_report(
+                data,
+                args.output,
+                {"issue_key": args.hotspot, "hotspot_lookup_error": str(hotspot_error)},
+            )
 
     elif args.hotspots:
         print(f"Buscando hotspots do projeto '{PROJECT_KEY}'...")

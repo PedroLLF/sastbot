@@ -1,4 +1,4 @@
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field, model_validator
 
 
 # ── SonarQube input ──────────────────────────────────────────────────────────
@@ -21,6 +21,41 @@ class SonarIssue(BaseModel):
     type: str | None = None
     status: str | None = None
     tags: list[str] = Field(default_factory=list)
+
+    @model_validator(mode="before")
+    @classmethod
+    def normalize_sonar_issue(cls, data):
+        if not isinstance(data, dict):
+            return data
+
+        normalized = dict(data)
+
+        rule_value = normalized.get("rule")
+        if isinstance(rule_value, dict):
+            normalized["rule"] = rule_value.get("key", "")
+
+            if not normalized.get("severity"):
+                probability = (rule_value.get("vulnerabilityProbability") or "").upper()
+                normalized["severity"] = {
+                    "HIGH": "CRITICAL",
+                    "MEDIUM": "MAJOR",
+                    "LOW": "MINOR",
+                }.get(probability, "MAJOR")
+
+        component_value = normalized.get("component")
+        if isinstance(component_value, dict):
+            normalized["component"] = component_value.get("key")
+
+        if not normalized.get("type"):
+            normalized["type"] = "SECURITY_HOTSPOT"
+
+        if normalized.get("tags") is None:
+            normalized["tags"] = []
+
+        if not normalized.get("severity"):
+            normalized["severity"] = "MAJOR"
+
+        return normalized
 
 
 class SonarReport(BaseModel):
