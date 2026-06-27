@@ -1,0 +1,50 @@
+{
+  "test_cases": [
+    {
+      "identificacao": {
+        "id_sonarqube": "typescript:S2068",
+        "arquivo": "juice-shop:frontend/src/app/login/login.component.ts",
+        "linha": 61,
+        "severidade_sast": "MAJOR",
+        "regra": "Review this potentially hard-coded password.",
+        "categoria": "Hard-coded Credentials"
+      },
+      "classificacao": {
+        "veredicto": "Potencial Verdadeiro Positivo",
+        "cwe": "CWE-259 / CWE-798",
+        "owasp_top_10": "A07:2021 - Identification and Authentication Failures",
+        "wstg": "WSTG-ATHN-07",
+        "justificativa": "O código declara um valor literal em texto claro em uma propriedade chamada `testingPassword` no componente de login do frontend. Por estar em código client-side, esse valor pode ser exposto no repositório, no artefato compilado ou no navegador do usuário. A confirmação do impacto depende de verificar se a credencial `testing@juice-sh.op` / `IamUsedForTesting` é válida no ambiente analisado e permite autenticação real."
+      },
+      "descricao_tecnica": "Foi identificado um possível password hard-coded no arquivo `frontend/src/app/login/login.component.ts`, linha 61: `public testingPassword = 'IamUsedForTesting'`. Credenciais embutidas em código, especialmente em frontend TypeScript/Angular, podem ser facilmente recuperadas por qualquer usuário com acesso ao código-fonte, aos bundles JavaScript gerados ou às ferramentas de desenvolvedor do navegador. Se a senha estiver associada a uma conta funcional, pode permitir autenticação indevida ou reutilização de credenciais.",
+      "pre_condicoes_para_verificacao": [
+        "Acesso ao repositório ou ao arquivo `frontend/src/app/login/login.component.ts`.",
+        "Acesso a um build ou ambiente implantado da aplicação para verificar exposição no frontend, quando aplicável.",
+        "Autorização para realizar tentativa controlada de autenticação com a credencial identificada.",
+        "Identificação do ambiente analisado, especialmente se é desenvolvimento, teste, homologação ou produção."
+      ],
+      "passos_de_verificacao": [
+        {
+          "passo": "Passo 01",
+          "resultado_esperado_verdadeiro_positivo": "Confirmar no arquivo `frontend/src/app/login/login.component.ts` que existe a atribuição literal `public testingPassword = 'IamUsedForTesting'` em código versionado da aplicação.",
+          "resultado_esperado_falso_positivo": "O valor está presente apenas em código de exemplo/teste não empacotado nem implantado no ambiente alvo, ou não é uma senha real utilizada por qualquer fluxo de autenticação."
+        },
+        {
+          "passo": "Passo 02",
+          "resultado_esperado_verdadeiro_positivo": "Após build/deploy, localizar o literal `IamUsedForTesting` nos artefatos gerados ou no conteúdo entregue pelo frontend, demonstrando exposição da senha ao cliente.",
+          "resultado_esperado_falso_positivo": "O literal não aparece nos artefatos publicados, bundles JavaScript, source maps ou páginas servidas ao usuário final."
+        },
+        {
+          "passo": "Passo 03",
+          "resultado_esperado_verdadeiro_positivo": "Usar a credencial associada no próprio componente, `testing@juice-sh.op` com senha `IamUsedForTesting`, no fluxo de login do ambiente avaliado e obter autenticação bem-sucedida.",
+          "resultado_esperado_falso_positivo": "A combinação `testing@juice-sh.op` / `IamUsedForTesting` não autentica no ambiente avaliado, ou a conta está desativada/inexistente e o valor é apenas massa de teste inofensiva fora de produção."
+        },
+        {
+          "passo": "Passo 04",
+          "resultado_esperado_verdadeiro_positivo": "Confirmar que a credencial hard-coded está disponível em ambiente acessível a usuários ou atacantes e que pode ser usada para assumir a identidade da conta correspondente.",
+          "resultado_esperado_falso_positivo": "Mesmo existindo no código, há evidência formal de que o trecho é exclusivo de ambiente controlado de testes, removido de produção por configuração/pipeline e sem conta válida associada."
+        }
+      ]
+    }
+  ]
+}

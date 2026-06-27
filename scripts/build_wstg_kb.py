@@ -7,9 +7,13 @@ Usage:
     python -m scripts.build_wstg_kb --wstg-root path/to/wstg/wstg
 """
 import re
+import io
 import argparse
+import zipfile
 from pathlib import Path
 import sys
+from urllib.request import urlopen
+from urllib.error import HTTPError, URLError
 
 sys.path.insert(0, str(Path(__file__).parent.parent))
 
@@ -49,6 +53,38 @@ SOURCES: dict[str, str] = {
     "WSTG-CRYP-03": f"{_DOC}/09-Testing_for_Weak_Cryptography/03-Testing_for_Sensitive_Information_Sent_via_Unencrypted_Channels.md",
     "WSTG-CRYP-04": f"{_DOC}/09-Testing_for_Weak_Cryptography/04-Testing_for_Weak_Cryptographic_Primitives.md",
 }
+
+
+def _download_wstg_repo(target_root: Path) -> Path | None:
+    candidates = [
+        "https://github.com/OWASP/wstg/archive/refs/heads/master.zip",
+        "https://github.com/OWASP/wstg/archive/refs/heads/main.zip",
+    ]
+
+    target_root.parent.mkdir(parents=True, exist_ok=True)
+
+    for url in candidates:
+        try:
+            print(f"Downloading WSTG from: {url}")
+            with urlopen(url, timeout=60) as response:
+                payload = response.read()
+
+            with zipfile.ZipFile(io.BytesIO(payload)) as archive:
+                archive.extractall(target_root.parent)
+
+            if (target_root / _DOC).exists():
+                print(f"WSTG downloaded to: {target_root}")
+                return target_root
+
+            for extracted in sorted(target_root.parent.iterdir(), key=lambda p: p.name):
+                if extracted.is_dir() and extracted.name.startswith("wstg-") and (extracted / _DOC).exists():
+                    print(f"WSTG downloaded to: {extracted}")
+                    return extracted
+
+        except (HTTPError, URLError, TimeoutError, zipfile.BadZipFile) as exc:
+            print(f"Download failed from {url}: {exc}")
+
+    return None
 
 
 def _strip_markdown(text: str) -> str:
@@ -97,12 +133,25 @@ def main() -> None:
         default="wstg/wstg",
         help="Path to the inner wstg/ directory of the cloned repo (default: wstg/wstg)",
     )
+    parser.add_argument(
+        "--no-download",
+        action="store_true",
+        help="Do not download WSTG repository automatically when missing.",
+    )
     args = parser.parse_args()
 
     wstg_root = Path(args.wstg_root)
     if not wstg_root.exists():
-        print(f"Error: wstg-root not found: {wstg_root}")
-        sys.exit(1)
+        print(f"wstg-root not found locally: {wstg_root}")
+        if args.no_download:
+            print(f"Error: wstg-root not found: {wstg_root}")
+            sys.exit(1)
+
+        downloaded_root = _download_wstg_repo(wstg_root)
+        if downloaded_root is None:
+            print(f"Error: wstg-root not found and automatic download failed: {wstg_root}")
+            sys.exit(1)
+        wstg_root = downloaded_root
 
     OUTPUT_DIR.mkdir(parents=True, exist_ok=True)
 

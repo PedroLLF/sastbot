@@ -1,0 +1,53 @@
+{
+    "generated_at": "2026-06-27T17:05:40.252942+00:00",
+    "project": "juice-shop",
+    "report_url": "http://localhost:9000/project/issues?issues=101f6c6f-b415-47a0-961c-e577bac36edb&open=101f6c6f-b415-47a0-961c-e577bac36edb&id=juice-shop",
+    "hotspot_key": "101f6c6f-b415-47a0-961c-e577bac36edb",
+    "total": 1,
+    "issues": [
+        {
+            "key": "101f6c6f-b415-47a0-961c-e577bac36edb",
+            "component": {
+                "key": "juice-shop:frontend/src/app/about/about.component.ts",
+                "qualifier": "FIL",
+                "name": "about.component.ts",
+                "longName": "frontend/src/app/about/about.component.ts",
+                "path": "frontend/src/app/about/about.component.ts"
+            },
+            "project": {
+                "key": "juice-shop",
+                "qualifier": "TRK",
+                "name": "OWASP Juice Shop",
+                "longName": "OWASP Juice Shop"
+            },
+            "rule": {
+                "key": "typescript:S6268",
+                "name": "Disabling Angular built-in sanitization is security-sensitive",
+                "securityCategory": "xss",
+                "vulnerabilityProbability": "HIGH",
+                "riskDescription": "<p>Angular prevents XSS vulnerabilities by treating all values as untrusted by default. Untrusted values are systematically sanitized by the framework\nbefore they are inserted into the DOM.</p>\n\n\n<p>Still, developers have the ability to manually mark a value as trusted if they are sure that the value is already sanitized. Accidentally trusting\nmalicious data will introduce an XSS vulnerability in the application and enable a wide range of serious attacks like accessing/modifying sensitive\ninformation or impersonating other users.</p>\n\n\n",
+                "vulnerabilityDescription": "<h2>Ask Yourself Whether</h2>\n\n\n<ul>\n<li>\nThe value for which sanitization has been disabled is user-controlled.\n</li>\n<li>\nIt&#8217;s difficult to understand how this value is constructed.\n</li>\n</ul>\n\n\n<p>There is a risk if you answered yes to any of those questions.</p>\n\n\n\n\n<h2>Sensitive Code Example</h2>\n\n\n\n<pre>\nimport { Component, OnInit } from '@angular/core';\nimport { DomSanitizer, SafeHtml } from \"@angular/platform-browser\";\nimport { ActivatedRoute } from '@angular/router';\n\n@Component({\n  template: '&lt;div id=\"hello\" [innerHTML]=\"hello\"&gt;&lt;/div&gt;'\n})\nexport class HelloComponent implements OnInit {\n  hello: SafeHtml;\n\n  constructor(private sanitizer: DomSanitizer, private route: ActivatedRoute) { }\n\n  ngOnInit(): void {\n    let name = this.route.snapshot.queryParams.name;\n    let html = \"&lt;h1&gt;Hello \" + name + \"&lt;/h1&gt;\";\n    this.hello = this.sanitizer.bypassSecurityTrustHtml(html); // Sensitive\n  }\n}\n</pre>\n\n\n\n\n\n",
+                "fixRecommendations": "<h2>Recommended Secure Coding Practices</h2>\n\n\n<ul>\n<li>\nAvoid including dynamic executable code and thus disabling Angular&#8217;s built-in sanitization unless it&#8217;s absolutely necessary. Try instead\nto rely as much as possible on static templates and Angular built-in sanitization to define web page content.\n</li>\n<li>\nMake sure to understand how the value to consider as trusted is constructed and never concatenate it with user-controlled data.\n</li>\n<li>\nMake sure to choose the correct <a href=\"https://angular.io/api/platform-browser/DomSanitizer\">DomSanitizer</a> \"bypass\" method based on the context.\nFor instance, only use <code>bypassSecurityTrustUrl</code> to trust urls in an <code>href</code> attribute context.\n</li>\n</ul>\n\n\n\n\n<h2>Compliant Solution</h2>\n\n\n\n<pre>\nimport { Component, OnInit } from '@angular/core';\nimport { DomSanitizer } from \"@angular/platform-browser\";\nimport { ActivatedRoute } from '@angular/router';\n\n@Component({\n  template: '&lt;div id=\"hello\"&gt;&lt;h1&gt;Hello {{name}}&lt;/h1&gt;&lt;/div&gt;',\n})\nexport class HelloComponent implements OnInit {\n  name: string;\n\n  constructor(private sanitizer: DomSanitizer, private route: ActivatedRoute) { }\n\n  ngOnInit(): void {\n    this.name = this.route.snapshot.queryParams.name;\n  }\n}\n</pre>\n\n\n\n\n\n<h2>See</h2>\n\n\n<ul>\n<li>\nOWASP - <a href=\"https://owasp.org/Top10/A03_2021-Injection/\">Top 10 2021 Category A3 - Injection</a>\n</li>\n<li>\nOWASP - <a href=\"https://owasp.org/www-project-top-ten/2017/A7_2017-Cross-Site_Scripting_(XSS)\">Top 10 2017 Category A7 - Cross-Site Scripting\n(XSS)</a>\n</li>\n<li>\nCWE - <a href=\"https://cwe.mitre.org/data/definitions/79\">CWE-79 - Improper Neutralization of Input During Web Page Generation ('Cross-site\nScripting')</a>\n</li>\n<li>\n<a href=\"https://angular.io/guide/security\">Angular - Best Practices - Security</a>\n</li>\n</ul>"
+            },
+            "status": "TO_REVIEW",
+            "line": 119,
+            "hash": "6af16ec762e8bcb472de89448d7a02b9",
+            "message": "Make sure disabling Angular built-in sanitization is safe here.",
+            "creationDate": "2026-04-16T12:43:20+0000",
+            "updateDate": "2026-04-16T12:43:20+0000",
+            "textRange": {
+                "startLine": 119,
+                "endLine": 119,
+                "startOffset": 48,
+                "endOffset": 71
+            },
+            "changelog": [],
+            "comment": [],
+            "users": [],
+            "canChangeStatus": true,
+            "flows": [],
+            "messageFormattings": [],
+            "codeVariants": []
+        }
+    ]
+}

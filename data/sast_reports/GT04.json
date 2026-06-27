@@ -1,0 +1,58 @@
+{
+    "generated_at": "2026-06-27T17:15:56.439919+00:00",
+    "project": "juice-shop",
+    "report_url": "http://localhost:9000/project/issues?issues=74de4cdb-5256-48b1-97af-c47eaa500ecc&open=74de4cdb-5256-48b1-97af-c47eaa500ecc&id=juice-shop",
+    "issue_key": "74de4cdb-5256-48b1-97af-c47eaa500ecc",
+    "hotspot_lookup_error": "Erro na API: 404 - {\"errors\":[{\"msg\":\"Hotspot \\u002774de4cdb-5256-48b1-97af-c47eaa500ecc\\u0027 does not exist\"}]}",
+    "total": 1,
+    "issues": [
+        {
+            "key": "74de4cdb-5256-48b1-97af-c47eaa500ecc",
+            "rule": "typescript:S7790",
+            "severity": "MAJOR",
+            "component": "juice-shop:routes/userProfile.ts",
+            "project": "juice-shop",
+            "line": 87,
+            "hash": "39cf65b2f3dfa28585ebc87e697b677a",
+            "textRange": {
+                "startLine": 87,
+                "endLine": 87,
+                "startOffset": 17,
+                "endOffset": 28
+            },
+            "flows": [],
+            "status": "OPEN",
+            "message": "Make sure this dynamically formatted template is safe here.",
+            "effort": "20min",
+            "debt": "20min",
+            "author": "",
+            "tags": [
+                "cwe"
+            ],
+            "creationDate": "2026-04-16T12:43:20+0000",
+            "updateDate": "2026-04-16T12:43:20+0000",
+            "type": "VULNERABILITY",
+            "scope": "MAIN",
+            "quickFixAvailable": false,
+            "messageFormattings": [],
+            "codeVariants": [],
+            "cleanCodeAttribute": "COMPLETE",
+            "cleanCodeAttributeCategory": "INTENTIONAL",
+            "impacts": [
+                {
+                    "softwareQuality": "SECURITY",
+                    "severity": "MEDIUM"
+                },
+                {
+                    "softwareQuality": "MAINTAINABILITY",
+                    "severity": "LOW"
+                }
+            ],
+            "issueStatus": "OPEN",
+            "prioritizedRule": false,
+            "fromSonarQubeUpdate": false,
+            "internalTags": [],
+            "linkedTicketStatus": "NOT_LINKED"
+        }
+    ]
+}

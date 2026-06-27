@@ -1,0 +1,55 @@
+{
+  "test_cases": [
+    {
+      "identificacao": {
+        "id_sonarqube": "secrets:S6706",
+        "arquivo": "juice-shop:lib/insecurity.ts",
+        "linha": 23,
+        "severidade_sast": "BLOCKER",
+        "regra": "secrets:S6706 - Make sure this private key gets revoked, changed, and removed from the code",
+        "categoria": "Exposição de segredo / chave privada hardcoded"
+      },
+      "classificacao": {
+        "veredicto": "Verdadeiro Positivo",
+        "cwe": "CWE-321: Use of Hard-coded Cryptographic Key / CWE-798: Use of Hard-coded Credentials",
+        "owasp_top_10": "A02:2021 - Cryptographic Failures",
+        "wstg": "WSTG-CRYP-04 - Testing for Weak Cryptographic Primitives",
+        "justificativa": "O trecho contém uma chave privada RSA em formato PEM diretamente declarada no código-fonte. A chave privada é material criptográfico sensível e, se o repositório, artefatoou imagem for acessível, pode permitir assinatura/forja de tokens ou outros artefatos criptográficos que dependam dessa chave. Portanto, o alerta é consistente com exposição de segredo em código."
+      },
+      "descricao_tecnica": "Foi identificada uma chave privada RSA hardcoded no arquivo lib/insecurity.ts, linha 23, atribuída a uma constante no código TypeScript. Chaves privadas não devem ser armazenadas em repositórios nem embutidas em código ou artefatos de aplicação. A correção esperada é revogar/rotacionar a chave, remover o segredo do histórico e do código, e carregar o material criptográfico a partir de um mecanismo seguro de gestão de segredos ou arquivo protegido fora do repositório.",
+      "pre_condicoes_para_verificacao": [
+        "Acesso ao repositório ou ao artefato contendo o arquivo lib/insecurity.ts.",
+        "Acesso à linha reportada pelo SonarQube e ao contexto de build/deploy da aplicação.",
+        "Ferramenta para validar formato de chave privada, por exemplo OpenSSL, ou biblioteca criptográfica compatível.",
+        "Permissão para revisar se o arquivo é empacotado e se a chave é usada em fluxos de autenticação, assinatura ou criptografia."
+      ],
+      "passos_de_verificacao": [
+        {
+          "passo": "Passo 01",
+          "resultado_esperado_verdadeiro_positivo": "A linha indicada contém um bloco PEM com delimitadores equivalentes a 'BEGIN RSA PRIVATE KEY' e 'END RSA PRIVATE KEY', indicando uma chave privada embutida no código.",
+          "resultado_esperado_falso_positivo": "A linha indicada não contém uma chave privada realem formato PEM, ou o valor é apenas um marcador não funcional que não representa material criptográfico válido."
+        },
+        {
+          "passo": "Passo 02",
+          "resultado_esperado_verdadeiro_positivo": "A chave pode ser parseada como chave privada RSA válida por ferramentas como OpenSSL ou bibliotecas criptográficas compatíveis.",
+          "resultado_esperado_falso_positivo": "A chave não é válida, não pode ser parseada por ferramentas criptográficas, ou não contém material privado utilizável."
+        },
+        {
+          "passo": "Passo 03",
+          "resultado_esperado_verdadeiro_positivo": "O arquivo faz parte do código da aplicação oudo artefato distribuído, expondo a chave a qualquer pessoa ou processo com acesso ao repositório, pacote, imagem ou ambiente onde o código esteja presente.",
+          "resultado_esperado_falso_positivo": "O arquivo afetado não é incluído em builds, pacotes, imagens, deploys ou fluxos executáveis, e há evidência objetiva de que o valor não é distribuídonem acessível fora de um ambiente isolado de teste controlado."
+        },
+        {
+          "passo": "Passo 04",
+          "resultado_esperado_verdadeiro_positivo": "A chave é utilizada, direta ou indiretamente,em funcionalidades de segurança como assinatura/verificação de JWT, criptografia, autenticação ou controle de integridade, aumentando o impacto da exposição.",
+          "resultado_esperado_falso_positivo": "Não há uso da chave para assinatura, autenticação,descriptografia ou qualquer decisão de segurança, e o valor é comprovadamente inerte no contexto da aplicação."
+        },
+        {
+          "passo": "Passo 05",
+          "resultado_esperado_verdadeiro_positivo": "A chave permanece no código ou no histórico do repositório. A triagem deve recomendar rotação/revogação da chave, remoção do código e limpeza dohistórico/artefatos quando aplicável.",
+          "resultado_esperado_falso_positivo": "Existe controle compensatório documentado e verificável que impede exposição e uso da chave, e a ocorrência foi removida antes de qualquer distribuição relevante."
+        }
+      ]
+    }
+  ]
+}

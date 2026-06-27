@@ -1,0 +1,53 @@
+{
+    "generated_at": "2026-06-27T17:17:01.607289+00:00",
+    "project": "juice-shop",
+    "report_url": "http://localhost:9000/project/issues?issues=6829619d-3476-446f-8922-d2cb10e8a2c7&open=6829619d-3476-446f-8922-d2cb10e8a2c7&id=juice-shop",
+    "hotspot_key": "6829619d-3476-446f-8922-d2cb10e8a2c7",
+    "total": 1,
+    "issues": [
+        {
+            "key": "6829619d-3476-446f-8922-d2cb10e8a2c7",
+            "component": {
+                "key": "juice-shop:server.ts",
+                "qualifier": "FIL",
+                "name": "server.ts",
+                "longName": "server.ts",
+                "path": "server.ts"
+            },
+            "project": {
+                "key": "juice-shop",
+                "qualifier": "TRK",
+                "name": "OWASP Juice Shop",
+                "longName": "OWASP Juice Shop"
+            },
+            "rule": {
+                "key": "typescript:S5122",
+                "name": "Having a permissive Cross-Origin Resource Sharing policy is security-sensitive",
+                "securityCategory": "insecure-conf",
+                "vulnerabilityProbability": "LOW",
+                "riskDescription": "<p>Having a permissive Cross-Origin Resource Sharing policy is security-sensitive. It has led in the past to the following vulnerabilities:</p>\n\n\n<ul>\n<li>\n<a href=\"https://www.cve.org/CVERecord?id=CVE-2018-0269\">CVE-2018-0269</a>\n</li>\n<li>\n<a href=\"https://www.cve.org/CVERecord?id=CVE-2017-14460\">CVE-2017-14460</a>\n</li>\n</ul>\n\n\n<p><a href=\"https://developer.mozilla.org/en-US/docs/Web/Security/Same-origin_policy\">Same origin policy</a> in browsers prevents, by default and for\nsecurity-reasons, a javascript frontend to perform a cross-origin HTTP request to a resource that has a different origin (domain, protocol, or port)\nfrom its own. The requested target can append additional HTTP headers in response, called <a\nhref=\"https://developer.mozilla.org/en-US/docs/Web/HTTP/CORS\">CORS</a>, that act like directives for the browser and change the access control policy\n/ relax the same origin policy.</p>\n\n\n",
+                "vulnerabilityDescription": "<h2>Ask Yourself Whether</h2>\n\n\n<ul>\n<li>\nYou don&#8217;t trust the origin specified, example:  <code>Access-Control-Allow-Origin: untrustedwebsite.com</code>.\n</li>\n<li>\nAccess control policy is entirely disabled: <code>Access-Control-Allow-Origin: *</code>\n</li>\n<li>\nYour access control policy is dynamically defined by a user-controlled input like <a\nhref=\"https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/Origin\"><code>origin</code></a> header.\n</li>\n</ul>\n\n\n<p>There is a risk if you answered yes to any of those questions.</p>\n\n\n\n\n<h2>Sensitive Code Example</h2>\n\n\n<p><a href=\"https://nodejs.org/api/http.html\">nodejs http</a> built-in module:</p>\n\n\n\n<pre>\nconst http = require('http');\nconst srv = http.createServer((req, res) =&gt; {\n  res.writeHead(200, { 'Access-Control-Allow-Origin': '*' }); // Sensitive\n  res.end('ok');\n});\nsrv.listen(3000);\n</pre>\n\n\n\n<p><a href=\"https://www.npmjs.com/package/express\">Express.js</a> framework with <a href=\"https://www.npmjs.com/package/cors\">cors middleware</a>:</p>\n\n\n\n<pre>\nconst cors = require('cors');\n\nlet app1 = express();\napp1.use(cors()); // Sensitive: by default origin is set to *\n\nlet corsOptions = {\n  origin: '*' // Sensitive\n};\n\nlet app2 = express();\napp2.use(cors(corsOptions));\n</pre>\n\n\n\n<p>User-controlled origin:</p>\n\n\n\n<pre>\nfunction (req, res) {\n  const origin = req.headers.origin;\n  res.setHeader('Access-Control-Allow-Origin', origin); // Sensitive\n};\n</pre>\n\n\n\n\n\n",
+                "fixRecommendations": "<h2>Recommended Secure Coding Practices</h2>\n\n\n<ul>\n<li>\nThe <code>Access-Control-Allow-Origin</code> header should be set only for a trusted origin and for specific resources.\n</li>\n<li>\nAllow only selected, trusted domains in the <code>Access-Control-Allow-Origin</code> header. Prefer whitelisting domains over blacklisting or allowing\nany domain (do not use * wildcard nor blindly return the <code>Origin</code> header content without any checks).\n</li>\n</ul>\n\n\n\n\n<h2>Compliant Solution</h2>\n\n\n<p><a href=\"https://nodejs.org/api/http.html\">nodejs http</a> built-in module:</p>\n\n\n\n<pre>\nconst http = require('http');\nconst srv = http.createServer((req, res) =&gt; {\n  res.writeHead(200, { 'Access-Control-Allow-Origin': 'trustedwebsite.com' }); // Compliant\n  res.end('ok');\n});\nsrv.listen(3000);\n</pre>\n\n\n\n<p><a href=\"https://www.npmjs.com/package/express\">Express.js</a> framework with <a href=\"https://www.npmjs.com/package/cors\">cors middleware</a>:</p>\n\n\n\n<pre>\nconst cors = require('cors');\n\nlet corsOptions = {\n  origin: 'trustedwebsite.com' // Compliant\n};\n\nlet app = express();\napp.use(cors(corsOptions));\n</pre>\n\n\n\n<p>User-controlled origin validated with an allow-list:</p>\n\n\n\n<pre>\nfunction (req, res) {\n  const origin = req.headers.origin;\n\n  if (origin === 'trustedwebsite.com') {\n    res.setHeader('Access-Control-Allow-Origin', origin);\n  }\n};\n</pre>\n\n\n\n\n\n<h2>See</h2>\n\n\n<ul>\n<li>\nOWASP - <a href=\"https://owasp.org/Top10/A05_2021-Security_Misconfiguration/\">Top 10 2021 Category A5 - Security Misconfiguration</a>\n</li>\n<li>\nOWASP - <a href=\"https://owasp.org/Top10/A07_2021-Identification_and_Authentication_Failures/\">Top 10 2021 Category A7 - Identification and\nAuthentication Failures</a>\n</li>\n<li>\n<a href=\"https://developer.mozilla.org/en-US/docs/Web/HTTP/CORS\">developer.mozilla.org</a> - CORS\n</li>\n<li>\n<a href=\"https://developer.mozilla.org/en-US/docs/Web/Security/Same-origin_policy\">developer.mozilla.org</a> - Same origin policy\n</li>\n<li>\nOWASP - <a href=\"https://owasp.org/www-project-top-ten/2017/A6_2017-Security_Misconfiguration\">Top 10 2017 Category A6 - Security Misconfiguration</a>\n</li>\n<li>\n<a href=\"https://cheatsheetseries.owasp.org/cheatsheets/HTML5_Security_Cheat_Sheet.html#cross-origin-resource-sharing\">OWASP HTML5 Security Cheat\nSheet</a> - Cross Origin Resource Sharing\n</li>\n<li>\nCWE - <a href=\"https://cwe.mitre.org/data/definitions/346\">CWE-346 - Origin Validation Error</a>\n</li>\n<li>\nCWE - <a href=\"https://cwe.mitre.org/data/definitions/942\">CWE-942 - Overly Permissive Cross-domain Whitelist</a>\n</li>\n</ul>"
+            },
+            "status": "TO_REVIEW",
+            "line": 182,
+            "hash": "54f4f39d6fa75912d5be97c69e5b0975",
+            "message": "Make sure that enabling CORS is safe here.",
+            "creationDate": "2026-04-16T12:43:20+0000",
+            "updateDate": "2026-04-16T12:43:20+0000",
+            "textRange": {
+                "startLine": 182,
+                "endLine": 182,
+                "startOffset": 2,
+                "endOffset": 17
+            },
+            "changelog": [],
+            "comment": [],
+            "users": [],
+            "canChangeStatus": true,
+            "flows": [],
+            "messageFormattings": [],
+            "codeVariants": []
+        }
+    ]
+}

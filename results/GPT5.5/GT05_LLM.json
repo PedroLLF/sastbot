@@ -1,0 +1,50 @@
+{
+  "test_cases": [
+    {
+      "identificacao": {
+        "id_sonarqube": "typescript:S5852",
+        "arquivo": "juice-shop:frontend/src/app/change-password/change-password.component.ts",
+        "linha": 92,
+        "severidade_sast": "MAJOR",
+        "regra": "Make sure the regex used here, which is vulnerable to super-linear runtime due to backtracking, cannot lead to denial of service.",
+        "categoria": "Denial of Service por expressão regular ineficiente / ReDoS"
+      },
+      "classificacao": {
+        "veredicto": "A confirmar",
+        "cwe": "CWE-1333: Inefficient Regular Expression Complexity",
+        "owasp_top_10": "A05:2021 - Security Misconfiguration",
+        "wstg": "WSTG-ATHN-07 / teste complementar de validação de política de senha e resiliência a consumo de recursos no cliente",
+        "justificativa": "O alerta é plausível porque a expressão regular contém múltiplos lookaheads com `.*` aplicados diretamente sobre `this.newPasswordControl.value`, que é entrada controlada pelo usuário. Em caso de senha longa que não satisfaça todos os lookaheads, o motor de regex JavaScript pode reavaliar a expressão em múltiplas posições por ela não estar ancorada, causando tempo superlinear. A exploração depende de a aplicação permitir entradas suficientemente longas neste campo antes da avaliação da regex; se houver limite efetivo pequeno, por exemplo 30 caracteres, antes da chamada a `match`, o impacto prático tende a ser falso positivo/baixo risco."
+      },
+      "descricao_tecnica": "No método `changePassword`, quando `localStorage.getItem('email')` corresponde a `/support@.*/`, a senha nova é validada com a regex `/(?=.*[a-z])(?=.*[A-Z])(?=.*\\d)(?=.*[@$!%*?&])[A-Za-z\\d@$!%*?&]{12,30}/`. A regex usa lookaheads positivos com `.*` e não possui âncoras `^` e `$`. Para entradas longas que falham em um dos requisitos, por exemplo uma string composta somente por letras minúsculas, o mecanismo pode executar varreduras repetidas e backtracking em várias posições da string, elevando o consumo de CPU no navegador e potencialmente causando travamento da interface. A verificação deve confirmar se existe limite real de tamanho antes da execução da regex e se o tempo de processamento cresce de forma superlinear com entradas maliciosas.",
+      "pre_condicoes_para_verificacao": [
+        "Ambiente local ou de teste da aplicação com o frontend acessível e possibilidade de abrir DevTools do navegador ou executar teste unitário do componente Angular.",
+        "Acesso ao fluxo de alteração de senha que executa `changePassword()` no componente `change-password.component.ts`.",
+        "Capacidade de definir `localStorage.email` com valor que corresponda a `support@.*`, por exemplo `support@test.local`, para atingir o trecho que avalia a regex.",
+        "Capacidade de inserir ou atribuir programaticamente valores longos em `newPasswordControl.value`, contornando eventuais restrições apenas visuais do campo HTML, se existirem."
+      ],
+      "passos_de_verificacao": [
+        {
+          "passo": "Passo 01",
+          "resultado_esperado_verdadeiro_positivo": "Não há limite efetivo de tamanho antes da chamada a `this.newPasswordControl.value.match(...)`, ou o limite existe apenas na interface e pode ser contornado programaticamente.",
+          "resultado_esperado_falso_positivo": "Existe controle efetivo de tamanho antes da avaliação da regex, como `maxlength`, validador Angular ou normalização que impeça valores acima de um limite pequeno, e esse controle não pode ser contornado por alteração direta do DOM, DevTools ou chamada programática do método."
+        },
+        {
+          "passo": "Passo 02",
+          "resultado_esperado_verdadeiro_positivo": "Ao configurar `localStorage.setItem('email', 'support@test.local')` ou outro valor iniciado por `support@`, o fluxo entra no bloco condicional e avalia a regex sobre a nova senha informada.",
+          "resultado_esperado_falso_positivo": "Com `localStorage.email` fora do padrão `support@.*`, a regex não é executada por curto-circuito lógico, ou o fluxo vulnerável não é alcançável para usuários reais."
+        },
+        {
+          "passo": "Passo 03",
+          "resultado_esperado_verdadeiro_positivo": "Ao usar uma entrada longa como `'a'.repeat(N)` no campo de nova senha, o tempo da chamada a `changePassword()` aumenta de forma superlinear conforme N cresce, com consumo elevado de CPU, atraso perceptível ou congelamento do navegador.",
+          "resultado_esperado_falso_positivo": "Ao testar entradas progressivamente maiores, por exemplo 10.000, 20.000 e 40.000 caracteres, compostas por caracteres permitidos mas sem cumprir a política, o tempo de execução permanece baixo e aproximadamente linear, sem congelamento perceptível da UI."
+        },
+        {
+          "passo": "Passo 04",
+          "resultado_esperado_verdadeiro_positivo": "A mesma regex sinalizada permanece em uso sobre a entrada completa do usuário, sem âncoras e sem limite prévio de tamanho, mantendo a condição de ReDoS no cliente.",
+          "resultado_esperado_falso_positivo": "A política de senha foi implementada sem regex vulnerável, por exemplo com verificações separadas e limite de tamanho aplicado antes das verificações, ou com regex ancorada e aplicada somente após truncamento/rejeição de entradas longas."
+        }
+      ]
+    }
+  ]
+}

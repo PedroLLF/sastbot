@@ -17,6 +17,43 @@ from backend.config import settings
 
 CWE_DIR = Path("data/knowledge_base/cwe")
 WSTG_DIR = Path("data/knowledge_base/wstg")
+MAX_CHARS_PER_CHUNK = 6000
+CHUNK_OVERLAP_CHARS = 400
+
+
+def _chunk_text(text: str, max_chars: int = MAX_CHARS_PER_CHUNK, overlap: int = CHUNK_OVERLAP_CHARS) -> list[str]:
+    text = text.strip()
+    if not text:
+        return []
+
+    if len(text) <= max_chars:
+        return [text]
+
+    chunks: list[str] = []
+    start = 0
+    text_len = len(text)
+
+    while start < text_len:
+        end = min(start + max_chars, text_len)
+        if end < text_len:
+            split_at = text.rfind("\n", start, end)
+            if split_at == -1 or split_at <= start + max_chars // 2:
+                split_at = text.rfind(". ", start, end)
+                if split_at != -1:
+                    split_at += 1
+            if split_at != -1 and split_at > start:
+                end = split_at + 1
+
+        chunk = text[start:end].strip()
+        if chunk:
+            chunks.append(chunk)
+
+        if end >= text_len:
+            break
+
+        start = max(end - overlap, start + 1)
+
+    return chunks
 
 
 def _get_or_create(client: chromadb.PersistentClient, name: str, embed_fn, reset: bool):
@@ -39,18 +76,35 @@ def ingest_directory(collection, directory: Path, source: str) -> int:
         print(f"  No .txt files found in {directory}")
         return 0
 
-    ids, documents, metadatas = [], [], []
+    ingested = 0
     for f in files:
         doc_id = f.stem
         content = f.read_text(encoding="utf-8")
         # first line is always "ID: Title" — extract title
         title = content.splitlines()[0].split(":", 1)[-1].strip() if content else doc_id
-        ids.append(doc_id)
-        documents.append(content)
-        metadatas.append({"source": source, "title": title})
 
-    collection.upsert(ids=ids, documents=documents, metadatas=metadatas)
-    return len(ids)
+        chunks = _chunk_text(content)
+        if not chunks:
+            continue
+
+        for chunk_index, chunk in enumerate(chunks, start=1):
+            chunk_id = f"{doc_id}::chunk{chunk_index:03d}" if len(chunks) > 1 else doc_id
+            collection.upsert(
+                ids=[chunk_id],
+                documents=[chunk],
+                metadatas=[
+                    {
+                        "source": source,
+                        "title": title,
+                        "source_id": doc_id,
+                        "chunk_index": chunk_index,
+                        "chunk_count": len(chunks),
+                    }
+                ],
+            )
+            ingested += 1
+
+    return ingested
 
 
 def main():

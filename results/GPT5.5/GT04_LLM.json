@@ -1,0 +1,50 @@
+{
+  "test_cases": [
+    {
+      "identificacao": {
+        "id_sonarqube": "typescript:S7790",
+        "arquivo": "juice-shop:routes/userProfile.ts",
+        "linha": 87,
+        "severidade_sast": "MAJOR",
+        "regra": "Make sure this dynamically formatted template is safe here.",
+        "categoria": "Server-Side Template Injection"
+      },
+      "classificacao": {
+        "veredicto": "A verificar",
+        "cwe": "CWE-1336",
+        "owasp_top_10": "A03:2021 - Injection",
+        "wstg": "WSTG-INPV-18 - Testing for Server-side Template Injection",
+        "justificativa": "O alerta é aplicável porque a função `pug.compile(template)` compila um template que foi previamente montado por substituições dinâmicas. Caso qualquer valor usado em `template.replace(...)` seja controlado ou influenciável por usuário antes da compilação, sintaxe especial do Pug pode ser interpretada como expressão de template, caracterizando Server-Side Template Injection. A validação deve confirmar se os dados dinâmicos inseridos no template são confiáveis, neutralizados ou escapados antes da compilação."
+      },
+      "descricao_tecnica": "O código em `routes/userProfile.ts` altera uma string de template por meio de `template.replace(...)` e em seguida chama `pug.compile(template)`. Essa ordem é sensível: se um valor externo for inserido no conteúdo do template antes da compilação, o mecanismo Pug poderá interpretar marcações, interpolações ou diretivas como parte do template, em vez de tratá-las apenas como dados. O teste deve verificar se campos como dados de perfil, tema, imagem de perfil, nome de usuário ou outros valores usados nas substituições conseguem introduzir sintaxe Pug, por exemplo uma expressão aritmética inofensiva, e se essa expressão é avaliada no HTML renderizado.",
+      "pre_condicoes_para_verificacao": [
+        "Ambiente da aplicação disponível para teste ou capacidade de executar a rota `routes/userProfile.ts` localmente.",
+        "Acesso ao código-fonte completo para rastrear a origem da variável `template` e dos valores usados em `template.replace(...)`.",
+        "Conta de usuário de teste ou outro meio legítimo de alterar os campos refletidos no perfil, como nome de usuário, imagem de perfil, tema ou configurações associadas.",
+        "Ferramenta para inspecionar a resposta HTTP/HTML renderizada, como navegador com DevTools, proxy HTTP ou testes automatizados de integração."
+      ],
+      "passos_de_verificacao": [
+        {
+          "passo": "Passo 01",
+          "resultado_esperado_verdadeiro_positivo": "Pelo menos um valor usado em `template.replace(...)` antes de `pug.compile(template)` vem direta ou indiretamente de entrada controlável pelo usuário, como perfil, nome de usuário, imagem de perfil, tema, parâmetro HTTP, cookie, banco de dados populado pelo usuário ou configuração alterável por usuário.",
+          "resultado_esperado_falso_positivo": "Todos os valores usados para montar `template` antes de `pug.compile(template)` são constantes, provenientes de configuração confiável não modificável por usuários, ou são tratados por mecanismo seguro que impede interpretação como sintaxe Pug."
+        },
+        {
+          "passo": "Passo 02",
+          "resultado_esperado_verdadeiro_positivo": "Ao inserir um payload inofensivo de template, como `#{7*7}`, no campo suspeito e acessar a página de perfil, a resposta HTML contém `49` no local correspondente, indicando que a expressão foi avaliada pelo mecanismo Pug.",
+          "resultado_esperado_falso_positivo": "Ao inserir um payload inofensivo de template, como `#{7*7}`, no campo suspeito e acessar a página de perfil, a resposta HTML exibe o texto literal `#{7*7}` ou o valor é escapado/removido, sem avaliação pelo Pug."
+        },
+        {
+          "passo": "Passo 03",
+          "resultado_esperado_verdadeiro_positivo": "Payloads contendo sintaxe Pug causam alteração estrutural no HTML, avaliação de expressão, erro de compilação revelando processamento do payload pelo Pug, ou qualquer comportamento indicando que a entrada foi incorporada ao template antes da compilação.",
+          "resultado_esperado_falso_positivo": "Payloads contendo caracteres relevantes para Pug, como `#{}`, quebras de linha, indentação, `=` ou diretivas, são neutralizados, rejeitados por validação ou renderizados como texto, sem erro de compilação ou mudança estrutural inesperada no HTML."
+        },
+        {
+          "passo": "Passo 04",
+          "resultado_esperado_verdadeiro_positivo": "A revisão do fluxo confirma que a aplicação concatena ou substitui dados não confiáveis diretamente na string do template e só depois compila com `pug.compile`, sem sandbox, allowlist ou escaping compatível com o contexto de template.",
+          "resultado_esperado_falso_positivo": "A revisão do fluxo mostra que a aplicação usa APIs seguras de renderização com variáveis separadas do template, por exemplo passando dados como locals/contexto para o Pug, ou aplica allowlist/escape específico antes da compilação."
+        }
+      ]
+    }
+  ]
+}

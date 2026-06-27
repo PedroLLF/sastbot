@@ -1,38 +1,37 @@
-"""CLI: load a SonarQube JSON report, optionally attach code snippets per finding,
-run RAG + LLM, and print test cases with retrieved context."""
+"""CLI: load a SonarQube JSON report, run RAG + LLM, and print structured test cases."""
 import json
 import sys
 from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).parent))
 
-from backend.schemas import SonarReport, SecurityTestCase, RetrievedDocument
+from backend.schemas import SonarReport
 from backend.chroma_service import query_knowledge
 from backend.openai_service import generate_test_cases
 
-_SNIPPET_HINT = "data/code_snippets/"
+_REPORT_PATH = Path("data/sast_reports/sample.json")
 
 
-def _collect_snippets(issues) -> list[str | None]:
-    """Prompt user for an optional code snippet per finding."""
+def _collect_code_snippets(issues) -> list[str | None]:
     snippets: list[str | None] = []
-    print(f"\nSample code snippets available in {_SNIPPET_HINT}")
-    print("For each finding, paste the vulnerable code snippet (multi-line).")
-    print("End input with a line containing only '###'. Press Enter then '###' to skip.\n")
+    print("\nYou can paste the vulnerable code snippet for each finding.")
+    print("Finish each snippet with a line containing only '###'. Press Enter then '###' to skip.\n")
 
-    for i, issue in enumerate(issues):
-        print(f"  Finding {i+1}: [{issue.rule}] {issue.message}")
-        print(f"  Component: {issue.component or 'N/A'} (line {issue.line or '?'})")
-        print("  Code snippet (end with '###' on its own line):")
+    for index, issue in enumerate(issues, start=1):
+        print(f"Finding {index}: [{issue.rule}] {issue.message}")
+        print(f"Component: {issue.component or 'N/A'} (line {issue.line or '?'})")
+        print("Code snippet (end with '###' on its own line):")
+
         lines: list[str] = []
         while True:
             try:
                 line = input()
             except EOFError:
-                break
+                line = "###"
             if line.strip() == "###":
                 break
             lines.append(line)
+
         snippet = "\n".join(lines).strip() or None
         snippets.append(snippet)
         print()
@@ -40,18 +39,20 @@ def _collect_snippets(issues) -> list[str | None]:
     return snippets
 
 
-_REPORT_PATH = Path("data/sast_reports/sample.json")
-
-
 def main() -> None:
-    report = SonarReport.model_validate_json(_REPORT_PATH.read_text(encoding="utf-8"))
-    print(f"Loaded {len(report.issues)} finding(s) from {_REPORT_PATH}.")
+    report_path = Path(
+        input(f"SonarQube report path [{_REPORT_PATH}]: ").strip() or str(_REPORT_PATH)
+    )
+    if not report_path.exists():
+        print(f"File not found: {report_path}")
+        sys.exit(1)
 
-    user_context = input("\nOptional focus/context (Enter to skip): ").strip()
+    report = SonarReport.model_validate_json(report_path.read_text(encoding="utf-8"))
+    print(f"Loaded {len(report.issues)} finding(s) from {report_path}.")
 
-    code_snippets = _collect_snippets(report.issues)
-    provided = sum(1 for s in code_snippets if s)
-    print(f"Code snippets provided: {provided}/{len(report.issues)}")
+    user_context = input("Optional focus/context (Enter to skip): ").strip()
+
+    code_snippets = _collect_code_snippets(report.issues)
 
     print("\nQuerying knowledge base (CWE + WSTG)...")
     retrieved_per_finding = [
@@ -65,23 +66,12 @@ def main() -> None:
 
     print("\nGenerating test cases...\n")
     llm_report = generate_test_cases(
-        report.issues, user_context, retrieved_per_finding, code_snippets
+        report.issues,
+        user_context,
+        retrieved_per_finding,
+        code_snippets,
     )
-
-    test_cases: list[SecurityTestCase] = []
-    for llm_tc, docs in zip(llm_report.test_cases, retrieved_per_finding):
-        test_cases.append(
-            SecurityTestCase(
-                **llm_tc.model_dump(),
-                retrieved_context=[
-                    RetrievedDocument(id=d.id, source=d.source, title=d.title)
-                    for d in docs
-                ],
-            )
-        )
-
-    output = {"test_cases": [tc.model_dump() for tc in test_cases]}
-    print(json.dumps(output, indent=2, ensure_ascii=False))
+    print(json.dumps(llm_report.model_dump(), indent=2, ensure_ascii=False))
 
 
 if __name__ == "__main__":

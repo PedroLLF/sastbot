@@ -1,0 +1,53 @@
+{
+    "generated_at": "2026-06-27T17:16:18.898816+00:00",
+    "project": "juice-shop",
+    "report_url": "http://localhost:9000/project/issues?issues=87daf531-960b-43e8-a596-ca1b9293b5af&open=87daf531-960b-43e8-a596-ca1b9293b5af&id=juice-shop",
+    "hotspot_key": "87daf531-960b-43e8-a596-ca1b9293b5af",
+    "total": 1,
+    "issues": [
+        {
+            "key": "87daf531-960b-43e8-a596-ca1b9293b5af",
+            "component": {
+                "key": "juice-shop:frontend/src/app/change-password/change-password.component.ts",
+                "qualifier": "FIL",
+                "name": "change-password.component.ts",
+                "longName": "frontend/src/app/change-password/change-password.component.ts",
+                "path": "frontend/src/app/change-password/change-password.component.ts"
+            },
+            "project": {
+                "key": "juice-shop",
+                "qualifier": "TRK",
+                "name": "OWASP Juice Shop",
+                "longName": "OWASP Juice Shop"
+            },
+            "rule": {
+                "key": "typescript:S5852",
+                "name": "Using slow regular expressions is security-sensitive",
+                "securityCategory": "dos",
+                "vulnerabilityProbability": "MEDIUM",
+                "riskDescription": "<p>Most of the regular expression engines use backtracking to try all possible execution paths of the regular expression when evaluating an input, in\nsome cases it can cause performance issues, called <strong>catastrophic backtracking</strong> situations. In the worst case, the complexity of the\nregular expression is exponential in the size of the input, this means that a small carefully-crafted input (like 20 chars) can trigger catastrophic\nbacktracking and cause a denial of service of the application. Super-linear regex complexity can lead to the same impact too with, in this case, a\nlarge carefully-crafted input (thousands chars).</p>\n\n\n<p>This rule determines the runtime complexity of a regular expression and informs you if it is not linear.</p>\n\n\n",
+                "vulnerabilityDescription": "<h2>Ask Yourself Whether</h2>\n\n\n<ul>\n<li>\nThe input is user-controlled.\n</li>\n<li>\nThe input size is not restricted to a small number of characters.\n</li>\n<li>\nThere is no timeout in place to limit the regex evaluation time.\n</li>\n</ul>\n\n\n<p>There is a risk if you answered yes to any of those questions.</p>\n\n\n\n\n<h2>Sensitive Code Example</h2>\n\n\n<p>The regex evaluation will never end:</p>\n\n\n\n<pre>\n/(a+)+$/.test(\n\"aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa\"+\n\"aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa\"+\n\"aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa\"+\n\"aaaaaaaaaaaaaaa!\"\n); // Sensitive\n</pre>\n\n\n\n\n\n",
+                "fixRecommendations": "<h2>Recommended Secure Coding Practices</h2>\n\n\n<p>To avoid catastrophic backtracking situations, make sure that none of the following conditions apply to your regular expression.</p>\n\n\n<p>In all of the following cases, catastrophic backtracking can only happen if the problematic part of the regex is followed by a pattern that can\nfail, causing the backtracking to actually happen.</p>\n\n\n<ul>\n<li>\nIf you have a repetition <code>r*</code> or <code>r*?</code>, such that the regex <code>r</code> could produce different possible matches (of possibly\ndifferent lengths) on the same input, the worst case matching time can be exponential. This can be the case if <code>r</code> contains optional parts,\nalternations or additional repetitions (but not if the repetition is written in such a way that there&#8217;s only one way to match it).\n</li>\n<li>\nIf you have multiple repetitions that can match the same contents and are consecutive or are only separated by an optional separator or a separator\nthat can be matched by both of the repetitions, the worst case matching time can be polynomial (O(n^c) where c is the number of problematic\nrepetitions). For example <code>a*b*</code> is not a problem because <code>a*</code> and <code>b*</code> match different things and <code>a*_a*</code>\nis not a problem because the repetitions are separated by a <code>'_'</code> and can&#8217;t match that <code>'_'</code>. However, <code>a*a*</code>\nand <code>.*_.*</code> have quadratic runtime.\n</li>\n<li>\nIf the regex is not anchored to the beginning of the string, quadratic runtime is especially hard to avoid because whenever a match fails, the regex\nengine will try again starting at the next index. This means that any unbounded repetition, if it&#8217;s followed by a pattern that can fail, can\ncause quadratic runtime on some inputs. For example <code>str.split(/\\s*,/)</code> will run in quadratic time on strings that consist entirely of\nspaces (or at least contain large sequences of spaces, not followed by a comma).\n</li>\n</ul>\n\n\n<p>In order to rewrite your regular expression without these patterns, consider the following strategies:</p>\n\n\n<ul>\n<li>\nIf applicable, define a maximum number of expected repetitions using the bounded quantifiers, like <code>{1,5}</code> instead of <code>+</code> for\ninstance.\n</li>\n<li>\nRefactor nested quantifiers to limit the number of way the inner group can be matched by the outer quantifier, for instance this nested quantifier\nsituation <code>(ba+)+</code> doesn&#8217;t cause performance issues, indeed, the inner group can be matched only if there exists exactly one\n<code>b</code> char per repetition of the group.\n</li>\n<li>\nOptimize regular expressions by emulating <em>possessive quantifiers</em> and <em>atomic grouping</em>.\n</li>\n<li>\nUse negated character classes instead of <code>.</code> to exclude separators where applicable. For example the quadratic regex <code>.*_.*</code> can\nbe made linear by changing it to <code>[^_]*_.*</code>\n</li>\n</ul>\n\n\n<p>Sometimes it&#8217;s not possible to rewrite the regex to be linear while still matching what you want it to match. Especially when the regex is\nnot anchored to the beginning of the string, for which it is quite hard to avoid quadratic runtimes. In those cases consider the following\napproaches:</p>\n\n\n<ul>\n<li>\nSolve the problem without regular expressions\n</li>\n<li>\nUse an alternative non-backtracking regex implementations such as Google&#8217;s <a href=\"https://github.com/google/re2\">RE2</a> or <a\nhref=\"https://github.com/uhop/node-re2/\">node-re2</a>.\n</li>\n<li>\nUse multiple passes. This could mean pre- and/or post-processing the string manually before/after applying the regular expression to it or using\nmultiple regular expressions. One example of this would be to replace <code>str.split(/\\s*,\\s*/)</code> with <code>str.split(\",\")</code> and then\ntrimming the spaces from the strings as a second step.\n</li>\n<li>\nIt is often possible to make the regex infallible by making all the parts that could fail optional, which will prevent backtracking. Of course this\nmeans that you&#8217;ll accept more strings than intended, but this can be handled by using capturing groups to check whether the optional parts were\nmatched or not and then ignoring the match if they weren&#8217;t. For example the regex <code>x*y</code> could be replaced with <code>x*(y)?</code>\nand then the call to <code>str.match(regex)</code> could be replaced with <code>matched = str.match(regex)</code> and  <code>matched[1] !==\nundefined</code>.\n</li>\n</ul>\n\n\n\n\n<h2>Compliant Solution</h2>\n\n\n<p>Possessive quantifiers do not keep backtracking positions, thus can be used, if possible, to avoid performance issues. Unfortunately, they are not\nsupported in JavaScript, but one can still mimick them using lookahead assertions and backreferences:</p>\n\n\n\n<pre>\n/((?=(a+))\\2)+$/.test(\n\"aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa\"+\n\"aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa\"+\n\"aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa\"+\n\"aaaaaaaaaaaaaaa!\"\n); // Compliant\n</pre>\n\n\n\n\n\n<h2>See</h2>\n\n\n<ul>\n<li>\nOWASP - <a href=\"https://owasp.org/www-project-top-ten/2017/A1_2017-Injection\">Top 10 2017 Category A1 - Injection</a>\n</li>\n<li>\nCWE - <a href=\"https://cwe.mitre.org/data/definitions/400\">CWE-400 - Uncontrolled Resource Consumption</a>\n</li>\n<li>\nCWE - <a href=\"https://cwe.mitre.org/data/definitions/1333\">CWE-1333 - Inefficient Regular Expression Complexity</a>\n</li>\n<li>\n<a href=\"https://owasp.org/www-community/attacks/Regular_expression_Denial_of_Service_-_ReDoS\">owasp.org</a> - OWASP Regular expression Denial of\nService - ReDoS\n</li>\n<li>\n<a\nhref=\"https://web.archive.org/web/20220506215733/https://stackstatus.net/post/147710624694/outage-postmortem-july-20-2016\">stackstatus.net(archived)</a>\n-  Outage Postmortem - July 20, 2016\n</li>\n<li>\n<a href=\"https://www.regular-expressions.info/catastrophic.html\">regular-expressions.info</a> - Runaway Regular Expressions: Catastrophic Backtracking\n</li>\n<li>\n<a\nhref=\"https://docs.microsoft.com/en-us/dotnet/standard/base-types/backtracking-in-regular-expressions#backtracking-with-nested-optional-quantifiers\">docs.microsoft.com</a>\n- Backtracking with Nested Optional Quantifiers\n</li>\n</ul>"
+            },
+            "status": "TO_REVIEW",
+            "line": 92,
+            "hash": "d576dd41be3367d4c643f76f456b4c59",
+            "message": "Make sure the regex used here, which is vulnerable to super-linear runtime due to backtracking, cannot lead to denial of service.",
+            "creationDate": "2026-04-16T12:43:20+0000",
+            "updateDate": "2026-04-16T12:43:20+0000",
+            "textRange": {
+                "startLine": 92,
+                "endLine": 92,
+                "startOffset": 8,
+                "endOffset": 79
+            },
+            "changelog": [],
+            "comment": [],
+            "users": [],
+            "canChangeStatus": true,
+            "flows": [],
+            "messageFormattings": [],
+            "codeVariants": []
+        }
+    ]
+}

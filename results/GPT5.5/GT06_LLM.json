@@ -1,0 +1,51 @@
+{
+  "test_cases": [
+    {
+      "identificacao": {
+        "id_sonarqube": "Finding 1",
+        "arquivo": "juice-shop:server.ts",
+        "linha": 182,
+        "severidade_sast": "MINOR",
+        "regra": "typescript:S5122",
+        "categoria": "CORS Misconfiguration"
+      },
+      "classificacao": {
+        "veredicto": "Verdadeiro positivo provável, com impacto dependente do contexto",
+        "cwe": "CWE-942 - Permissive Cross-domain Security Policy with Untrusted Domains",
+        "owasp_top_10": "A05:2021 - Security Misconfiguration",
+        "wstg": "WSTG-CLNT-07 - Testing Cross Origin Resource Sharing",
+        "justificativa": "O código configura o middleware CORS de forma global com `app.options('*', cors())` e `app.use(cors())`, sem lista explícita de origens confiáveis. No pacote `cors` do Express, essa configuração tende a permitir qualquer origem via `Access-Control-Allow-Origin: *`. Isso confirma a existência de uma política CORS permissiva; o impacto prático deve ser validado conforme os endpoints expostos, dados retornados e uso de credenciais/autenticação."
+      },
+      "descricao_tecnica": "A aplicação Express habilita CORS globalmente e responde a preflights para qualquer rota usando configuração padrão, sem validação do cabeçalho `Origin` contra uma allowlist. Isso pode fazer com que APIs aceitem requisições cross-origin de domínios não confiáveis e retornem cabeçalhos permissivos, como `Access-Control-Allow-Origin: *`. A verificação deve confirmar em execução se esses cabeçalhos são emitidos para origens arbitrárias e se endpoints sensíveis ficam acessíveis/legíveis por código executado em outro domínio.",
+      "pre_condicoes_para_verificacao": [
+        "Aplicação implantada em ambiente de teste ou homologação acessível por HTTP/HTTPS.",
+        "Endpoint válido da aplicação para teste, preferencialmente um endpoint de API que retorne JSON ou dados de negócio.",
+        "Ferramenta para inspeção de cabeçalhos HTTP, como curl, Burp Suite, OWASP ZAP ou navegador com DevTools.",
+        "Origem arbitrária controlada para teste, por exemplo `https://evil.example`, enviada no cabeçalho `Origin`.",
+        "Se a avaliação de impacto envolver dados autenticados, possuir uma conta de teste e sessão/token válidos, sem usar dados reais de produção."
+      ],
+      "passos_de_verificacao": [
+        {
+          "passo": "Passo 01",
+          "resultado_esperado_verdadeiro_positivo": "Confirmar no código que `app.options('*', cors())` e `app.use(cors())` são aplicados globalmente sem parâmetro `origin`, callback de validação ou allowlist de domínios confiáveis.",
+          "resultado_esperado_falso_positivo": "A configuração efetiva não é permissiva, por exemplo: há opções de CORS restritivas aplicadas em outro ponto, proxy/reverse proxy remove os cabeçalhos permissivos, ou apenas origens explicitamente confiáveis são permitidas."
+        },
+        {
+          "passo": "Passo 02",
+          "resultado_esperado_verdadeiro_positivo": "Executar uma requisição para um endpoint existente usando uma origem arbitrária, por exemplo `Origin: https://evil.example`, e observar que a resposta contém `Access-Control-Allow-Origin: *` ou reflete a origem arbitrária. Exemplo: `curl -i -H 'Origin: https://evil.example' https://<host>/<endpoint>`.",
+          "resultado_esperado_falso_positivo": "A resposta não contém `Access-Control-Allow-Origin`, ou retorna apenas uma origem confiável previamente cadastrada, ou rejeita a origem arbitrária usada no teste."
+        },
+        {
+          "passo": "Passo 03",
+          "resultado_esperado_verdadeiro_positivo": "Executar um preflight OPTIONS com origem arbitrária, por exemplo `curl -i -X OPTIONS -H 'Origin: https://evil.example' -H 'Access-Control-Request-Method: GET' -H 'Access-Control-Request-Headers: Content-Type' https://<host>/<endpoint>`, e verificar que a aplicação responde permitindo a origem arbitrária e o método solicitado.",
+          "resultado_esperado_falso_positivo": "O preflight para origem arbitrária é rejeitado, não retorna cabeçalhos CORS permissivos, ou limita métodos/cabeçalhos a uma política documentada e necessária para origens confiáveis."
+        },
+        {
+          "passo": "Passo 04",
+          "resultado_esperado_verdadeiro_positivo": "Identificar pelo menos um endpoint relevante que retorne dados de negócio ou dados sensíveis e confirmar que o navegador conseguiria ler a resposta a partir de uma origem não confiável devido aos cabeçalhos CORS permissivos. Se houver autenticação por cookie, verificar também se `Access-Control-Allow-Credentials: true` é usado com origem arbitrária/refletida; se não houver credenciais, documentar o impacto como exposição cross-origin de endpoints não autenticados.",
+          "resultado_esperado_falso_positivo": "Mesmo com CORS permissivo, não há endpoints que retornem dados sensíveis a chamadas cross-origin, não há suporte a credenciais para origens não confiáveis, ou os endpoints afetados são estritamente públicos e a exposição é aceita por requisito documentado."
+        }
+      ]
+    }
+  ]
+}

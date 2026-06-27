@@ -1,0 +1,51 @@
+{
+  "test_cases": [
+    {
+      "identificacao": {
+        "id_sonarqube": "typescript:S1523",
+        "arquivo": "routes/b2bOrder.ts",
+        "linha": 23,
+        "severidade_sast": "MAJOR",
+        "regra": "Make sure that this dynamic injection or execution of code is safe.",
+        "categoria": "Injection / Dynamic Code Execution"
+      },
+      "classificacao": {
+        "veredicto": "Verdadeiro Positivo condicional",
+        "cwe": "CWE-95 / CWE-94",
+        "owasp_top_10": "A03:2021 - Injection",
+        "wstg": "WSTG-INPV-12 - Testing for Code Injection",
+        "justificativa": "O valor de body.orderLinesData, controlado pelo corpo da requisição HTTP, é repassado para safeEval dentro de vm.runInContext. Embora exista uso de contexto/sandbox e timeout, a entrada externa continua sendo interpretada como código JavaScript, caracterizando risco de eval/code injection quando o fluxo é alcançável, especialmente com os challenges rceChallenge ou rceOccupyChallenge habilitados."
+      },
+      "descricao_tecnica": "No arquivo routes/b2bOrder.ts, a função b2bOrder obtém orderLinesData diretamente de body.orderLinesData e cria um sandbox contendo safeEval e orderLinesData. Em seguida, executa vm.runInContext('safeEval(orderLinesData)', sandbox, { timeout: 2000 }). Apesar de o código passado ao vm.runInContext ser uma string fixa, o conteúdo de orderLinesData é avaliado por safeEval. Se esse parâmetro for controlável por um usuário e o caminho condicionado por utils.isChallengeEnabled(...) estiver ativo, um atacante pode injetar expressões/código JavaScript, provocar exceções controladas, loops até timeout ou tentar escapar das restrições do sandbox.",
+      "pre_condicoes_para_verificacao": [
+        "Executar os testes somente em ambiente local, de homologação ou laboratório, nunca em produção.",
+        "Identificar a rota HTTP registrada que invoca routes/b2bOrder.ts::b2bOrder().",
+        "Garantir que os challenges rceChallenge ou rceOccupyChallenge estejam habilitados, pois o trecho vulnerável é condicionado por utils.isChallengeEnabled(...).",
+        "Ter permissão para enviar requisições ao endpoint B2B e acesso aos logs/respostas de erro da aplicação.",
+        "Preparar uma requisição base válida para a rota, preservando os campos obrigatórios como cid e demais dados esperados pelo endpoint."
+      ],
+      "passos_de_verificacao": [
+        {
+          "passo": "Passo 01",
+          "resultado_esperado_verdadeiro_positivo": "Confirmar que a rota Express que chama b2bOrder() é acessível e que body.orderLinesData é preenchido a partir do corpo da requisição sem validação estrita, allowlist ou parsing seguro antes da chamada a safeEval.",
+          "resultado_esperado_falso_positivo": "O parâmetro orderLinesData não é controlável por usuário externo, a rota não é registrada/exposta, ou o fluxo nunca é alcançado no ambiente avaliado devido à configuração permanente dos challenges como desabilitados."
+        },
+        {
+          "passo": "Passo 02",
+          "resultado_esperado_verdadeiro_positivo": "Confirmar que safeEval interpreta a string recebida como código/expressão JavaScript ou utiliza mecanismo equivalente de avaliação dinâmica, tornando orderLinesData uma entrada executável.",
+          "resultado_esperado_falso_positivo": "A implementação de safeEval não executa código JavaScript arbitrário e apenas interpreta um formato de dados seguro, por exemplo JSON estritamente validado, sem uso de eval, Function, vm ou mecanismo equivalente."
+        },
+        {
+          "passo": "Passo 03",
+          "resultado_esperado_verdadeiro_positivo": "Em ambiente isolado e com os challenges necessários habilitados, enviar uma requisição válida para a rota B2B alterando orderLinesData para um payload não destrutivo como \"SAST_RCE_PROBE()\" ou \"(()=>{throw new Error('SAST_RCE_PROBE')})()\". A resposta ou os logs devem indicar erro de execução JavaScript contendo o marcador, por exemplo ReferenceError ou Error com SAST_RCE_PROBE, demonstrando que a entrada foi avaliada.",
+          "resultado_esperado_falso_positivo": "A requisição é rejeitada por validação antes da avaliação dinâmica, ou o marcador é tratado apenas como dado literal e não aparece como erro de execução JavaScript."
+        },
+        {
+          "passo": "Passo 04",
+          "resultado_esperado_verdadeiro_positivo": "Opcionalmente, apenas em ambiente controlado, enviar um payload de disponibilidade como \"while(true){}\" para confirmar o comportamento do timeout. O resultado esperado é interrupção por timeout, resposta de erro/503 ou log com mensagem compatível com execução de script excedendo o tempo, evidenciando que código fornecido pelo usuário foi executado até o limite configurado.",
+          "resultado_esperado_falso_positivo": "Um payload de loop é bloqueado por validação de entrada antes de chegar ao mecanismo de avaliação, sem consumo anormal de tempo e sem mensagem de timeout do executor."
+        }
+      ]
+    }
+  ]
+}
